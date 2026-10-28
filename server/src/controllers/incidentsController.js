@@ -1,31 +1,30 @@
-import db from '../db/database.js';
+import db, { clearAllPreScenarios } from '../db/database.js';
 import { llmDialogue } from '../services/llmDialogueService.js';
 import { OpenAIDecisionsService } from '../services/openaiDecisionsService.js';
 
 export const incidentsController = {
-  // GET /api/incidents/tickets (or scenarios)
+  // GET /api/incidents/tickets
   getTickets(req, res) {
     try {
-      const tickets = db.prepare('SELECT * FROM tickets ORDER BY created_at ASC').all();
+      const tickets = db.prepare('SELECT * FROM tickets ORDER BY created_at DESC').all();
       const formatted = tickets.map(t => {
         let reporter = {};
         try { reporter = JSON.parse(t.reporter_json || '{}'); } catch (e) {}
 
-        // Fetch claims
         const claims = db.prepare('SELECT * FROM epistemic_claims WHERE ticket_id = ?').all(t.id);
 
         return {
-          id: t.scenario_id,
+          id: t.scenario_id || t.id,
           ticketId: t.id,
           title: t.title,
           subtitle: t.subtitle,
-          department: t.department,
-          targetDepartment: t.target_department,
+          department: t.department || 'Operations Team',
+          targetDepartment: t.target_department || 'On-Call Engineering',
           urgency: t.urgency,
           sufficientDetail: t.sufficient_detail,
           status: t.status,
-          matchedSop: t.matched_sop,
-          impact: t.impact,
+          matchedSop: t.matched_sop || 'SOP-DYNAMIC-01: Incident Triage Protocol',
+          impact: t.impact || 'Under Operational Assessment',
           reporter,
           claims
         };
@@ -35,6 +34,59 @@ export const incidentsController = {
     } catch (err) {
       console.error('[incidentsController] Error in getTickets:', err);
       res.status(500).json({ error: 'Failed to fetch tickets', details: err.message });
+    }
+  },
+
+  // POST /api/incidents/tickets (Create a dynamic new incident ticket)
+  createTicket(req, res) {
+    try {
+      const { title, callerName, department, targetDepartment, urgency } = req.body || {};
+      const ticketId = `INC-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const newTicket = {
+        id: ticketId,
+        scenario_id: ticketId.toLowerCase(),
+        title: title || 'New Incident Call',
+        subtitle: 'Live Frontline Operational Intake',
+        department: department || 'Operations',
+        target_department: targetDepartment || 'Incident Escalation Queue',
+        urgency: urgency || 5,
+        sufficient_detail: 0.25,
+        status: 'TRIAGING',
+        matched_sop: 'SOP-DYNAMIC-01: Incident Triage Protocol',
+        impact: 'Evaluating frontline business impact',
+        reporter_json: JSON.stringify({
+          name: callerName || 'Frontline Caller',
+          role: 'Operational Reporter',
+          location: 'Live Stream'
+        })
+      };
+
+      db.prepare(`
+        INSERT INTO tickets (
+          id, scenario_id, title, subtitle, department, target_department,
+          urgency, sufficient_detail, status, matched_sop, impact, reporter_json
+        ) VALUES (
+          @id, @scenario_id, @title, @subtitle, @department, @target_department,
+          @urgency, @sufficient_detail, @status, @matched_sop, @impact, @reporter_json
+        )
+      `).run(newTicket);
+
+      // Add welcoming agent turn
+      const welcomeTurn = "SyncUp Incident Intake active. Please state the operational problem, affected systems, and frontline impact.";
+      db.prepare(`
+        INSERT INTO conversation_turns (ticket_id, role, sender, body)
+        VALUES (?, 'agent', 'SyncUp Intake Agent', ?)
+      `).run(ticketId, welcomeTurn);
+
+      res.status(201).json({
+        success: true,
+        ticket: newTicket,
+        initialGreeting: welcomeTurn
+      });
+    } catch (err) {
+      console.error('[incidentsController] Error in createTicket:', err);
+      res.status(500).json({ error: 'Failed to create ticket', details: err.message });
     }
   },
 
@@ -56,7 +108,7 @@ export const incidentsController = {
 
       res.json({
         ticket: {
-          id: ticket.scenario_id,
+          id: ticket.scenario_id || ticket.id,
           ticketId: ticket.id,
           title: ticket.title,
           subtitle: ticket.subtitle,
@@ -78,37 +130,76 @@ export const incidentsController = {
     }
   },
 
-  // POST /api/incidents/tickets/:id/turn (The Two-Brain AI pipeline)
+  // POST /api/incidents/turn (Process speech turn with dynamic ticket auto-creation)
   async processTurn(req, res) {
     try {
-      const { id } = req.params;
       const { userMessage, senderName } = req.body;
+      let ticketId = req.params.id || req.body.ticketId || req.body.scenarioId;
 
       if (!userMessage || !userMessage.trim()) {
         return res.status(400).json({ error: 'userMessage is required' });
       }
 
-      const ticket = db.prepare('SELECT * FROM tickets WHERE id = ? OR scenario_id = ?').get(id, id);
+      // If no ticket exists yet, create one dynamically on the fly
+      let ticket = ticketId ? db.prepare('SELECT * FROM tickets WHERE id = ? OR scenario_id = ?').get(ticketId, ticketId) : null;
+
       if (!ticket) {
-        return res.status(404).json({ error: 'Ticket not found' });
+        ticketId = `INC-${Math.floor(1000 + Math.random() * 9000)}`;
+
+        // Dynamic department inference from caller speech
+        const lower = userMessage.toLowerCase();
+        let inferredDept = 'General Operations';
+        let inferredTarget = 'On-Call Engineering';
+
+        if (lower.includes('scanner') || lower.includes('warehouse') || lower.includes('truck') || lower.includes('wms')) {
+          inferredDept = 'Supply Chain & Logistics';
+          inferredTarget = 'Warehouse IT Systems';
+        } else if (lower.includes('pay') || lower.includes('504') || lower.includes('checkout') || lower.includes('bank')) {
+          inferredDept = 'Payments Core';
+          inferredTarget = 'Financial Systems Engineering';
+        } else if (lower.includes('icu') || lower.includes('patient') || lower.includes('vital') || lower.includes('nurse')) {
+          inferredDept = 'Clinical Care';
+          inferredTarget = 'Clinical Engineering';
+        } else if (lower.includes('cloud') || lower.includes('server') || lower.includes('database') || lower.includes('kubernetes')) {
+          inferredDept = 'Cloud Platform';
+          inferredTarget = 'Site Reliability Engineering';
+        }
+
+        const dynamicTitle = userMessage.length > 45 ? `${userMessage.slice(0, 42)}...` : userMessage;
+
+        db.prepare(`
+          INSERT INTO tickets (
+            id, scenario_id, title, subtitle, department, target_department,
+            urgency, sufficient_detail, status, matched_sop, impact, reporter_json
+          ) VALUES (?, ?, ?, ?, ?, ?, 5, 0.40, 'TRIAGING', 'SOP-GEN-01: Priority Escalation', 'Active Frontline Incident', ?)
+        `).run(
+          ticketId,
+          ticketId.toLowerCase(),
+          dynamicTitle,
+          'Dynamic Incident Intake',
+          inferredDept,
+          inferredTarget,
+          JSON.stringify({ name: senderName || 'Frontline Caller', role: 'Caller', location: 'Live Intake' })
+        );
+
+        ticket = db.prepare('SELECT * FROM tickets WHERE id = ?').get(ticketId);
       }
 
-      const ticketId = ticket.id;
+      ticketId = ticket.id;
       let reporter = {};
       try { reporter = JSON.parse(ticket.reporter_json || '{}'); } catch (e) {}
 
-      // 1. Save caller turn to SQLite database
+      // 1. Save caller turn
       db.prepare(`
         INSERT INTO conversation_turns (ticket_id, role, sender, body)
         VALUES (?, 'reporter', ?, ?)
       `).run(ticketId, senderName || reporter.name || 'Caller', userMessage.trim());
 
-      // Fetch existing conversation history and unresolved unknowns
       const conversationHistory = db.prepare('SELECT role, sender, body FROM conversation_turns WHERE ticket_id = ? ORDER BY id ASC').all(ticketId);
       const existingClaims = db.prepare('SELECT * FROM epistemic_claims WHERE ticket_id = ?').all(ticketId);
       const criticalUnknowns = existingClaims.filter(c => c.type === 'critical_unknown');
 
-      // 2. BRAIN 1: LLM Communicator generates the next Socratic clarifying question
+      // 2. Brain 1: Socratic Probing Question
       const socraticResult = await llmDialogue.generateNextTurn({
         ticket,
         conversationHistory,
@@ -116,7 +207,7 @@ export const incidentsController = {
         criticalUnknowns
       });
 
-      // 3. BRAIN 2: Decisions API evaluates mathematical predicate & extracts structured claims
+      // 3. Brain 2: Decisions API Evaluation
       const decisionsResult = await OpenAIDecisionsService.evaluate(userMessage, [
         {
           type: 'predicate',
@@ -130,7 +221,7 @@ export const incidentsController = {
         }
       ]);
 
-      // Extract new claims from the caller's statement
+      // Extract new claims from caller's statement
       const newClaims = OpenAIDecisionsService.extractClaims(userMessage, ticketId);
       for (const claim of newClaims) {
         db.prepare(`
@@ -139,22 +230,22 @@ export const incidentsController = {
         `).run(claim.id, ticketId, claim.text, claim.type, claim.confidence);
       }
 
-      // Calculate updated detail score
-      const newDetailScore = Math.min(1.0, parseFloat((ticket.sufficient_detail + 0.02).toFixed(2)));
+      // Update detail score in database
+      const newDetailScore = Math.min(1.0, parseFloat((ticket.sufficient_detail + 0.05).toFixed(2)));
       db.prepare('UPDATE tickets SET sufficient_detail = ? WHERE id = ?').run(newDetailScore, ticketId);
 
-      // 4. Save agent response turn to SQLite database
+      // 4. Save agent reply turn
       const agentReplyText = socraticResult.reply;
       db.prepare(`
         INSERT INTO conversation_turns (ticket_id, role, sender, body)
         VALUES (?, 'agent', 'SyncUp Intake Agent', ?)
       `).run(ticketId, agentReplyText);
 
-      // Fetch updated claims and turns
       const allClaims = db.prepare('SELECT id, text, type, confidence FROM epistemic_claims WHERE ticket_id = ? ORDER BY id DESC').all(ticketId);
 
       res.json({
         success: true,
+        ticketId,
         agentResponse: agentReplyText,
         source: socraticResult.source,
         decisionEvaluation: decisionsResult.answers,
@@ -165,6 +256,16 @@ export const incidentsController = {
     } catch (err) {
       console.error('[incidentsController] Error processing turn:', err);
       res.status(500).json({ error: 'Failed to process turn', details: err.message });
+    }
+  },
+
+  // DELETE /api/incidents/clear (Clears all tickets and turns)
+  clearTickets(req, res) {
+    try {
+      clearAllPreScenarios();
+      res.json({ success: true, message: 'All tickets and conversation history cleared from database.' });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to clear database', details: err.message });
     }
   }
 };

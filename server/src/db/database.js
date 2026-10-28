@@ -17,11 +17,11 @@ const db = new Database(dbPath);
 // Enable WAL mode for ultra-fast concurrent reads and writes
 db.pragma('journal_mode = WAL');
 
-// Initialize schema
+// Initialize schema (No hardcoded pre-scenarios)
 db.exec(`
   CREATE TABLE IF NOT EXISTS tickets (
     id TEXT PRIMARY KEY,
-    scenario_id TEXT UNIQUE,
+    scenario_id TEXT,
     title TEXT NOT NULL,
     subtitle TEXT,
     department TEXT,
@@ -67,70 +67,15 @@ db.exec(`
   );
 `);
 
-// Auto-seed initial enterprise scenarios if database is empty
-const ticketCount = db.prepare('SELECT COUNT(*) as count FROM tickets').get().count;
-
-if (ticketCount === 0) {
-  const seedFile = path.resolve(__dirname, '../data/scenariosData.json');
-  if (fs.existsSync(seedFile)) {
-    try {
-      const scenarios = JSON.parse(fs.readFileSync(seedFile, 'utf8'));
-      const insertTicket = db.prepare(`
-        INSERT INTO tickets (
-          id, scenario_id, title, subtitle, department, target_department,
-          urgency, sufficient_detail, status, matched_sop, impact, reporter_json
-        ) VALUES (
-          @ticketId, @id, @title, @subtitle, @department, @targetDepartment,
-          @urgency, @sufficientDetail, 'TRIAGING', @matchedSop, @impact, @reporterJson
-        )
-      `);
-
-      const insertTurn = db.prepare(`
-        INSERT INTO conversation_turns (ticket_id, role, sender, body)
-        VALUES (?, ?, ?, ?)
-      `);
-
-      const insertClaim = db.prepare(`
-        INSERT INTO epistemic_claims (id, ticket_id, text, type, confidence)
-        VALUES (?, ?, ?, ?, ?)
-      `);
-
-      const seedAll = db.transaction(() => {
-        for (const sc of scenarios) {
-          insertTicket.run({
-            ticketId: sc.ticketId,
-            id: sc.id,
-            title: sc.title,
-            subtitle: sc.subtitle,
-            department: sc.department,
-            targetDepartment: sc.targetDepartment,
-            urgency: sc.urgency,
-            sufficientDetail: sc.sufficientDetail,
-            matchedSop: sc.matchedSop,
-            impact: sc.impact,
-            reporterJson: JSON.stringify(sc.reporter)
-          });
-
-          // Seed initial turns
-          insertTurn.run(sc.ticketId, 'reporter', sc.reporter.name, sc.initialReport);
-          insertTurn.run(sc.ticketId, 'agent', 'SyncUp Intake Agent', sc.initialAgentQuestion);
-
-          // Seed claims
-          if (Array.isArray(sc.claims)) {
-            for (const c of sc.claims) {
-              const claimId = `${sc.ticketId}_claim_${c.id}`;
-              insertClaim.run(claimId, sc.ticketId, c.text, c.type, c.confidence);
-            }
-          }
-        }
-      });
-
-      seedAll();
-      console.log(`[DB] Successfully seeded ${scenarios.length} incident scenarios into SQLite database at: ${dbPath}`);
-    } catch (err) {
-      console.error('[DB] Error seeding database:', err);
-    }
-  }
+/**
+ * Wipe pre-scenarios so database starts clean with no predetermined teams
+ */
+export function clearAllPreScenarios() {
+  db.prepare('DELETE FROM conversation_turns').run();
+  db.prepare('DELETE FROM epistemic_claims').run();
+  db.prepare('DELETE FROM dispatch_audit').run();
+  db.prepare('DELETE FROM tickets').run();
+  console.log('[DB] Database wiped clean. No pre-set scenarios or fixed teams stored.');
 }
 
 export default db;
