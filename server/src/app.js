@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { CONFIG } from './config.js';
+import db from './db/database.js';
 import incidentsRoutes from './routes/incidentsRoutes.js';
 import decisionsRoutes from './routes/decisionsRoutes.js';
 import dispatchRoutes from './routes/dispatchRoutes.js';
@@ -16,11 +17,21 @@ export function createApp() {
   }));
   app.use(express.json());
 
-  // Health Check
+  // Health Check & Database Status
   app.get('/api/health', (req, res) => {
+    let dbStatus = 'healthy';
+    let ticketCount = 0;
+    try {
+      ticketCount = db.prepare('SELECT COUNT(*) as count FROM tickets').get().count;
+    } catch (e) {
+      dbStatus = 'degraded';
+    }
+
     res.json({
       status: 'healthy',
-      system: 'SyncUp Incident Intake API',
+      database: dbStatus,
+      persistedTickets: ticketCount,
+      system: 'SyncUp Incident Intake & Decisions API',
       timestamp: new Date().toISOString(),
       uptime: process.uptime()
     });

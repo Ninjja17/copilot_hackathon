@@ -46,9 +46,9 @@ export class OpenAIDecisionsService {
       if (q.type === 'predicate') {
         let prob = 0.5;
         if (q.name === 'sufficient_detail_collected') {
-          const hasTime = inputStr.includes('at') || inputStr.includes('minutes') || inputStr.includes('hours');
-          const hasScale = inputStr.includes('all') || inputStr.includes('24') || inputStr.includes('30%') || inputStr.includes('orders');
-          const hasSymptom = inputStr.includes('error') || inputStr.includes('freeze') || inputStr.includes('timeout') || inputStr.includes('fail');
+          const hasTime = inputStr.includes('at') || inputStr.includes('minutes') || inputStr.includes('hours') || inputStr.includes('window');
+          const hasScale = inputStr.includes('all') || inputStr.includes('24') || inputStr.includes('30%') || inputStr.includes('orders') || inputStr.includes('beds');
+          const hasSymptom = inputStr.includes('error') || inputStr.includes('freeze') || inputStr.includes('timeout') || inputStr.includes('fail') || inputStr.includes('mem_alloc');
           prob = (hasTime ? 0.35 : 0.1) + (hasScale ? 0.35 : 0.1) + (hasSymptom ? 0.28 : 0.1);
         } else {
           prob = 0.88;
@@ -60,20 +60,20 @@ export class OpenAIDecisionsService {
         };
       } else if (q.type === 'choice') {
         if (q.name === 'epistemic_category') {
-          if (inputStr.includes('think') || inputStr.includes('guess') || inputStr.includes('suspect')) {
+          if (inputStr.includes('think') || inputStr.includes('guess') || inputStr.includes('suspect') || inputStr.includes('maybe')) {
             simulatedAnswers[q.name] = { type: 'choice', selected: 'user_hypothesis', confidence: 0.92 };
-          } else if (inputStr.includes('unknown') || inputStr.includes('whether') || inputStr.includes('haven\'t')) {
+          } else if (inputStr.includes('unknown') || inputStr.includes('whether') || inputStr.includes('haven\'t') || inputStr.includes('not sure')) {
             simulatedAnswers[q.name] = { type: 'choice', selected: 'critical_unknown', confidence: 0.95 };
           } else {
             simulatedAnswers[q.name] = { type: 'choice', selected: 'observed_fact', confidence: 0.97 };
           }
         } else {
-          simulatedAnswers[q.name] = { type: 'choice', selected: q.options?.[0] || 'IT_Infrastructure', confidence: 0.94 };
+          simulatedAnswers[q.name] = { type: 'choice', selected: q.options?.[0] || 'IT_Hardware_Infrastructure', confidence: 0.94 };
         }
       } else if (q.type === 'score') {
         simulatedAnswers[q.name] = {
           type: 'score',
-          score: inputStr.includes('halt') || inputStr.includes('standstill') || inputStr.includes('patient') ? 5 : 4,
+          score: inputStr.includes('halt') || inputStr.includes('standstill') || inputStr.includes('patient') || inputStr.includes('critical') ? 5 : 4,
           rationale: 'High operational impact on frontline SLAs.'
         };
       }
@@ -82,9 +82,50 @@ export class OpenAIDecisionsService {
     return {
       success: true,
       source: 'local_gpt6_luna_simulator',
-      latencyMs: Date.now() - startTime + 85,
+      latencyMs: Date.now() - startTime + 45,
       model: 'gpt-6-luna',
       answers: simulatedAnswers
     };
+  }
+
+  /**
+   * Evaluates caller input and extracts structured epistemic claims
+   */
+  static extractClaims(text, ticketId) {
+    if (!text || text.length < 5) return [];
+    const lower = text.toLowerCase();
+    const claims = [];
+
+    if (lower.includes('firmware') || lower.includes('update') || lower.includes('deploy') || lower.includes('think')) {
+      claims.push({
+        id: `${ticketId}_claim_${Date.now()}_hypo`,
+        ticket_id: ticketId,
+        text: `Investigating correlation: "${text.slice(0, 95)}..."`,
+        type: 'user_hypothesis',
+        confidence: 0.91
+      });
+    }
+
+    if (lower.includes('zone') || lower.includes('scanner') || lower.includes('freeze') || lower.includes('fail') || lower.includes('error') || lower.includes('504')) {
+      claims.push({
+        id: `${ticketId}_claim_${Date.now()}_fact`,
+        ticket_id: ticketId,
+        text: `Confirmed failure operational scope: "${text.slice(0, 95)}..."`,
+        type: 'observed_fact',
+        confidence: 0.97
+      });
+    }
+
+    if (lower.includes('unknown') || lower.includes('whether') || lower.includes('check') || lower.includes('not sure')) {
+      claims.push({
+        id: `${ticketId}_claim_${Date.now()}_unk`,
+        ticket_id: ticketId,
+        text: `Verification needed: "${text.slice(0, 95)}..."`,
+        type: 'critical_unknown',
+        confidence: 0.94
+      });
+    }
+
+    return claims;
   }
 }

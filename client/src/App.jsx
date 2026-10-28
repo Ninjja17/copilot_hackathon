@@ -21,7 +21,7 @@ import { useSpeechSynthesis } from './hooks/useSpeechSynthesis';
 import { useHandsFreeMic } from './hooks/useHandsFreeMic';
 import { api } from './services/api';
 
-// Default initial scenarios (mirrored with backend database)
+// Fallback initial scenarios in case backend is unreachable during static preview
 const DEFAULT_SCENARIOS = [
   {
     id: "logistics_scanners",
@@ -43,12 +43,12 @@ const DEFAULT_SCENARIOS = [
     initialReport: "Hey SyncUp, our pickers in Zone B are at a total standstill. All 24 handheld barcode scanners started freezing up at 23:45 whenever they scan batches with QR prefix 'PR-'. Power cycling only works for one scan before it locks up with a MEM_ALLOC_FAIL error. We have trucks leaving in 2 hours and 400 orders in the backlog.",
     initialAgentQuestion: "I hear the urgency, Marcus—halting 24 pickers before truck departure is high stakes. Can you tell me: did this start immediately after the 22:00 WMS maintenance window, and are any units in Zone A or C having this same issue?",
     claims: [
-      { id: 1, text: "All 24 Zone B handheld scanners freezing on QR prefix 'PR-'", type: "observed_fact", confidence: 0.98 },
-      { id: 2, text: "Scanners lock up with MEM_ALLOC_FAIL error code", type: "observed_fact", confidence: 0.97 },
-      { id: 3, text: "Zone A scanners on 1D barcodes are functioning normally", type: "observed_fact", confidence: 0.95 },
-      { id: 4, text: "WMS 22:00 maintenance firmware update altered buffer size", type: "user_hypothesis", confidence: 0.91 },
-      { id: 5, text: "Whether Zone C is experiencing the same QR scan crash", type: "critical_unknown", confidence: 0.94 },
-      { id: 6, text: "Whether OTA Wi-Fi rollback is supported without physical docking", type: "critical_unknown", confidence: 0.96 }
+      { id: "c1", text: "All 24 Zone B handheld scanners freezing on QR prefix 'PR-'", type: "observed_fact", confidence: 0.98 },
+      { id: "c2", text: "Scanners lock up with MEM_ALLOC_FAIL error code", type: "observed_fact", confidence: 0.97 },
+      { id: "c3", text: "Zone A scanners on 1D barcodes are functioning normally", type: "observed_fact", confidence: 0.95 },
+      { id: "c4", text: "WMS 22:00 maintenance firmware update altered buffer size", type: "user_hypothesis", confidence: 0.91 },
+      { id: "c5", text: "Whether Zone C is experiencing the same QR scan crash", type: "critical_unknown", confidence: 0.94 },
+      { id: "c6", text: "Whether OTA Wi-Fi rollback is supported without physical docking", type: "critical_unknown", confidence: 0.96 }
     ]
   },
   {
@@ -71,12 +71,12 @@ const DEFAULT_SCENARIOS = [
     initialReport: "SyncUp, our enterprise client Lumina Retail is reporting that 30% of their checkout requests are failing with HTTP 504 Gateway Timeouts. Their customer support queue has spiked by 200 tickets in the last 20 minutes.",
     initialAgentQuestion: "Understood Siddharth. Are the 504 timeouts isolated to a specific payment method or geography, and what latency are you observing on the upstream acquiring bank connector?",
     claims: [
-      { id: 1, text: "30% of Lumina Retail checkout attempts failing with 504 Timeouts", type: "observed_fact", confidence: 0.97 },
-      { id: 2, text: "Failures isolated to Apple Pay tokens via Frankfurt gateway", type: "observed_fact", confidence: 0.93 },
-      { id: 3, text: "Direct credit card entries are passing smoothly", type: "observed_fact", confidence: 0.99 },
-      { id: 4, text: "Token decryption microservice throttling after morning deploy", type: "user_hypothesis", confidence: 0.88 },
-      { id: 5, text: "Traffic reroute to London secondary gateway not yet executed", type: "observed_fact", confidence: 0.95 },
-      { id: 6, text: "Whether other European merchants are experiencing degradation", type: "critical_unknown", confidence: 0.96 }
+      { id: "c1", text: "30% of Lumina Retail checkout attempts failing with 504 Timeouts", type: "observed_fact", confidence: 0.97 },
+      { id: "c2", text: "Failures isolated to Apple Pay tokens via Frankfurt gateway", type: "observed_fact", confidence: 0.93 },
+      { id: "c3", text: "Direct credit card entries are passing smoothly", type: "observed_fact", confidence: 0.99 },
+      { id: "c4", text: "Token decryption microservice throttling after morning deploy", type: "user_hypothesis", confidence: 0.88 },
+      { id: "c5", text: "Traffic reroute to London secondary gateway not yet executed", type: "observed_fact", confidence: 0.95 },
+      { id: "c6", text: "Whether other European merchants are experiencing degradation", type: "critical_unknown", confidence: 0.96 }
     ]
   },
   {
@@ -99,12 +99,12 @@ const DEFAULT_SCENARIOS = [
     initialReport: "SyncUp, our bedside tablets in ICU Ward 4 aren't pushing patient vitals to the telemetry central nurses' station. We entered telemetry stats 15 minutes ago and the central screens are still showing 'Awaiting Data'.",
     initialAgentQuestion: "Nurse Elena, this is vital for patient safety. Are the local bedside monitors sounding their own physical alarms if vitals cross critical thresholds, and is this affecting all 12 beds in ICU-4?",
     claims: [
-      { id: 1, text: "Local bedside Philips monitors alarm properly and independently", type: "observed_fact", confidence: 0.99 },
-      { id: 2, text: "Central telemetry station blank for beds 401 through 408", type: "observed_fact", confidence: 0.98 },
-      { id: 3, text: "South wing beds 409-412 replicating normally", type: "observed_fact", confidence: 0.94 },
-      { id: 4, text: "Corridor 4A Wi-Fi access point dropped offline", type: "user_hypothesis", confidence: 0.85 },
-      { id: 5, text: "Manual bedside paper logging initiated with 2 float nurses", type: "observed_fact", confidence: 0.97 },
-      { id: 6, text: "Whether VLAN 40 medical Wi-Fi controller reports reboot loops", type: "critical_unknown", confidence: 0.95 }
+      { id: "c1", text: "Local bedside Philips monitors alarm properly and independently", type: "observed_fact", confidence: 0.99 },
+      { id: "c2", text: "Central telemetry station blank for beds 401 through 408", type: "observed_fact", confidence: 0.98 },
+      { id: "c3", text: "South wing beds 409-412 replicating normally", type: "observed_fact", confidence: 0.94 },
+      { id: "c4", text: "Corridor 4A Wi-Fi access point dropped offline", type: "user_hypothesis", confidence: 0.85 },
+      { id: "c5", text: "Manual bedside paper logging initiated with 2 float nurses", type: "observed_fact", confidence: 0.97 },
+      { id: "c6", text: "Whether VLAN 40 medical Wi-Fi controller reports reboot loops", type: "critical_unknown", confidence: 0.95 }
     ]
   }
 ];
@@ -139,11 +139,27 @@ export default function App() {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
-  // Fetch scenarios from backend if available
+  // Fetch scenarios & persisted tickets from SQLite backend on boot
   useEffect(() => {
     api.getScenarios().then((data) => {
       if (data && Array.isArray(data) && data.length > 0) {
         setScenarios(data);
+        const first = data[0];
+        if (first) {
+          // Fetch full persistent conversation history from DB
+          api.getTicketDetails(first.ticketId).then((details) => {
+            if (details && details.conversation && details.conversation.length > 0) {
+              setConversation(details.conversation);
+            }
+            if (details && details.claims && details.claims.length > 0) {
+              setClaims(details.claims);
+            }
+            if (details && details.ticket) {
+              setSufficientDetail(details.ticket.sufficientDetail || 0.96);
+              setIsDispatched(details.ticket.status === 'P1_DISPATCHED');
+            }
+          });
+        }
       }
     });
   }, []);
@@ -152,7 +168,7 @@ export default function App() {
   const handleUserMessage = useCallback(async (text) => {
     if (!text || !text.trim()) return;
 
-    // 1. Add user turn
+    // 1. Optimistically append user turn in UI
     const userMsg = {
       role: 'reporter',
       sender: activeScenario.reporter.name,
@@ -161,51 +177,42 @@ export default function App() {
 
     setConversation(prev => [...prev, userMsg]);
 
-    // 2. Call backend turn processor or fallback locally
+    // 2. Process turn through Two-Brain backend (LLM Socratic dialogue + Decisions API + SQLite persistence)
     const turnResult = await api.processTurn({
+      ticketId: activeScenario.ticketId,
       scenarioId: activeScenario.id,
       userMessage: text,
-      conversationHistory: conversation
+      senderName: activeScenario.reporter?.name
     });
 
     let agentResponseText = '';
-    let extractedClaims = null;
 
     if (turnResult && turnResult.agentResponse) {
       agentResponseText = turnResult.agentResponse;
-      if (turnResult.newClaims && turnResult.newClaims.length > 0) {
-        extractedClaims = turnResult.newClaims;
+
+      if (turnResult.allClaims && Array.isArray(turnResult.allClaims)) {
+        setClaims(turnResult.allClaims);
+      } else if (turnResult.newClaims && turnResult.newClaims.length > 0) {
+        setClaims(prev => [...turnResult.newClaims, ...prev]);
+      }
+
+      if (typeof turnResult.sufficientDetail === 'number') {
+        setSufficientDetail(turnResult.sufficientDetail);
       }
     } else {
-      // Local fallback logic
+      // Local Socratic Prober fallback
       const lower = text.toLowerCase();
       if (lower.includes('firmware') || lower.includes('update') || lower.includes('deploy')) {
-        extractedClaims = [{
-          id: Date.now(),
-          text: `Investigating firmware/deployment correlation from caller report: "${text.slice(0, 70)}..."`,
-          type: 'user_hypothesis',
-          confidence: 0.93
-        }];
         agentResponseText = "Noted on the update. Do you have physical access to the server switch racks right now, or is there an on-call network engineer available to initiate an OTA rollback?";
       } else if (lower.includes('zone') || lower.includes('scanner') || lower.includes('fail') || lower.includes('freeze')) {
-        extractedClaims = [{
-          id: Date.now(),
-          text: `Confirmed failure scope: "${text.slice(0, 70)}..."`,
-          type: 'observed_fact',
-          confidence: 0.97
-        }];
         agentResponseText = "Understood. What is the current operational fallback on the floor—are teams manually cataloging, and what is your hard deadline before shipping trucks depart?";
       } else {
         agentResponseText = "I have logged those operational details into the incident dossier. Are there any adjacent systems or external clients currently impacted?";
       }
-    }
-
-    if (extractedClaims) {
-      setClaims(prev => [...extractedClaims, ...prev]);
       setSufficientDetail(prev => Math.min(1.0, prev + 0.02));
     }
 
-    // 3. Agent response turn & TTS
+    // 3. Agent response turn & pleasant Voice TTS output
     setTimeout(() => {
       setConversation(prev => [
         ...prev,
@@ -216,8 +223,8 @@ export default function App() {
         }
       ]);
       speak(agentResponseText);
-    }, 450);
-  }, [activeScenario, conversation, speak]);
+    }, 400);
+  }, [activeScenario, speak]);
 
   const {
     isListening,
@@ -229,30 +236,41 @@ export default function App() {
     isAgentSpeaking: isSpeaking
   });
 
-  // Switch active scenario
-  const handleSelectScenario = (idx) => {
+  // Switch active scenario & load persistent conversation history
+  const handleSelectScenario = async (idx) => {
     setSelectedIdx(idx);
     const sc = scenarios[idx] || DEFAULT_SCENARIOS[idx];
-    setConversation([
-      {
-        role: 'reporter',
-        sender: sc.reporter.name,
-        body: sc.initialReport
-      },
-      {
-        role: 'agent',
-        sender: 'SyncUp Intake Agent',
-        body: sc.initialAgentQuestion
-      }
-    ]);
-    setClaims(sc.claims);
-    setSufficientDetail(sc.sufficientDetail);
-    setIsDispatched(false);
+
+    // Load persisted history from SQLite if available
+    const details = await api.getTicketDetails(sc.ticketId);
+    if (details && details.conversation && details.conversation.length > 0) {
+      setConversation(details.conversation);
+      setClaims(details.claims || sc.claims);
+      setSufficientDetail(details.ticket?.sufficientDetail || sc.sufficientDetail);
+      setIsDispatched(details.ticket?.status === 'P1_DISPATCHED');
+    } else {
+      setConversation([
+        {
+          role: 'reporter',
+          sender: sc.reporter.name,
+          body: sc.initialReport
+        },
+        {
+          role: 'agent',
+          sender: 'SyncUp Intake Agent',
+          body: sc.initialAgentQuestion
+        }
+      ]);
+      setClaims(sc.claims);
+      setSufficientDetail(sc.sufficientDetail);
+      setIsDispatched(sc.status === 'P1_DISPATCHED');
+    }
+
     showToast('Incident Loaded', `${sc.title} (${sc.ticketId})`, 'info');
     speak(sc.initialAgentQuestion);
   };
 
-  // Dispatch incident ticket
+  // Dispatch incident ticket & record persistent audit log
   const handleDispatch = async () => {
     setIsDispatched(true);
     const ticketPayload = {
