@@ -1,0 +1,27 @@
+{
+  "name": "syncup-fullstack",
+  "version": "1.0.0",
+  "description": "SyncUp — Autonomous Voice Problem Intake & Incident Triage Full-Stack Platform",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "node server/server.js",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "npm run build --prefix client",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client"
+  },
+  "keywords": [
+    "voice-agent",
+    "incident-triage",
+    "problem-intake",
+    "speech-recognition",
+    "canvas-ui",
+    "openai-decisions"
+  ],
+  "author": "DeepMind Advanced Agentic Coding",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

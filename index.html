@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SyncUp — Interactive Problem Intake Agent (Interaction-First)</title>
+  <meta name="description" content="Interaction-first problem intake companion with glowing AI orb, voice and chat, powered by Hume AI & ElevenLabs aesthetic." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23D4FF24'><circle cx='12' cy='12' r='10'/></svg>" />
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Interaction-First Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- React 18, ReactDOM & Babel -->
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 18 Application: Interaction-First Architecture -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+
+
+    // ========================================================
+    // Inspira UI: BorderBeam Laser Animation
+    // ========================================================
+    function BorderBeam() {
+      return (
+        <div className="inspira-border-beam" aria-hidden="true">
+          <div className="beam-glow"></div>
+        </div>
+      );
+    }
+
+    // ========================================================
+    // Inspira UI: Meteors Ambient Particle System
+    // ========================================================
+    function Meteors({ count = 14 }) {
+      const meteors = useRef(
+        Array.from({ length: count }, () => ({
+          top: Math.random() * 65 + "%",
+          left: Math.random() * 100 + "%",
+          delay: (Math.random() * 7).toFixed(1) + "s",
+          duration: (3.5 + Math.random() * 4).toFixed(1) + "s"
+        }))
+      ).current;
+
+      return (
+        <div className="inspira-meteors-container" aria-hidden="true">
+          {meteors.map((m, idx) => (
+            <span
+              key={idx}
+              className="inspira-meteor"
+              style={{
+                top: m.top,
+                left: m.left,
+                animationDelay: m.delay,
+                animationDuration: m.duration
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    // ========================================================
+    // Inspira UI: CardSpotlight Interactive Cursor Glow
+    // ========================================================
+    function CardSpotlight({ children, className = "", style = {} }) {
+      const cardRef = useRef(null);
+      const [coords, setCoords] = useState({ x: 0, y: 0 });
+      const [opacity, setOpacity] = useState(0);
+
+      const handleMouseMove = (e) => {
+        if (!cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
+        setCoords({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      };
+
+      return (
+        <div
+          ref={cardRef}
+          onMouseMove={handleMouseMove}
+          onMouseEnter={() => setOpacity(1)}
+          onMouseLeave={() => setOpacity(0)}
+          className={`inspira-card-spotlight ${className}`}
+          style={style}
+        >
+          <div
+            className="spotlight-overlay"
+            style={{
+              opacity,
+              background: `radial-gradient(550px circle at ${coords.x}px ${coords.y}px, rgba(21, 88, 201, 0.16), transparent 75%)`
+            }}
+          />
+          {children}
+        </div>
+      );
+    }
+
+    // ========================================================
+    // Canvas UI: Ambient Reactive Particle Field (Pattern #75)
+    // ========================================================
+    function CanvasParticleField() {
+      const canvasRef = useRef(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        let animId;
+        let width = (canvas.width = window.innerWidth);
+        let height = (canvas.height = window.innerHeight);
+
+        const onResize = () => {
+          if (!canvas) return;
+          width = canvas.width = window.innerWidth;
+          height = canvas.height = window.innerHeight;
+        };
+        window.addEventListener("resize", onResize);
+
+        const mouse = { x: -1000, y: -1000, active: false };
+        const onMouseMove = (e) => {
+          mouse.x = e.clientX;
+          mouse.y = e.clientY;
+          mouse.active = true;
+        };
+        const onMouseLeave = () => {
+          mouse.active = false;
+        };
+        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mouseleave", onMouseLeave);
+
+        const nodeCount = Math.min(Math.floor((width * height) / 24000), 50);
+        const nodes = Array.from({ length: nodeCount }, () => ({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.45,
+          vy: (Math.random() - 0.5) * 0.45,
+          radius: Math.random() * 1.6 + 0.8,
+          color: Math.random() > 0.86 ? "#D4FF24" : "#1558C9" // 10% lime, 30% cobalt
+        }));
+
+        const render = () => {
+          ctx.clearRect(0, 0, width, height);
+
+          // Render node network and physics displacement
+          for (let i = 0; i < nodes.length; i++) {
+            const a = nodes[i];
+            a.x += a.vx;
+            a.y += a.vy;
+
+            if (a.x < 0) a.x = width;
+            if (a.x > width) a.x = 0;
+            if (a.y < 0) a.y = height;
+            if (a.y > height) a.y = 0;
+
+            // Canvas UI Pointer Displacement Vector
+            if (mouse.active) {
+              const dx = a.x - mouse.x;
+              const dy = a.y - mouse.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < 130) {
+                const force = (130 - dist) / 130;
+                a.x += (dx / dist) * force * 2.2;
+                a.y += (dy / dist) * force * 2.2;
+              }
+            }
+
+            // Draw Node
+            ctx.beginPath();
+            ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
+            ctx.fillStyle = a.color === "#D4FF24" ? "rgba(212, 255, 36, 0.85)" : "rgba(21, 88, 201, 0.85)";
+            ctx.fill();
+
+            // Connect nearest filaments
+            for (let j = i + 1; j < nodes.length; j++) {
+              const b = nodes[j];
+              const dx = a.x - b.x;
+              const dy = a.y - b.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+
+              if (dist < 115) {
+                const alpha = (1 - dist / 115) * 0.2;
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.strokeStyle = `rgba(21, 88, 201, ${alpha})`;
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+              }
+            }
+          }
+
+          animId = requestAnimationFrame(render);
+        };
+
+        animId = requestAnimationFrame(render);
+
+        return () => {
+          cancelAnimationFrame(animId);
+          window.removeEventListener("resize", onResize);
+          window.removeEventListener("mousemove", onMouseMove);
+          window.removeEventListener("mouseleave", onMouseLeave);
+        };
+      }, []);
+
+      return (
+        <canvas
+          ref={canvasRef}
+          className="canvas-ui-ambient-field"
+          aria-hidden="true"
+        />
+      );
+    }
+
+    // ========================================================
+    // Canvas UI: 3D Metallic Horizon AI Sphere (Precision Specular + Liquid Equator)
+    // Style matches user reference: Satin pearl dome, equatorial horizon band,
+    // obsidian shadow bowl, razor-sharp 1.2px Fresnel rim light.
+    // ========================================================
+    function CanvasFluidOrb({ isSpeaking, isRecording, onClick }) {
+      const canvasRef = useRef(null);
+      const shockwavesRef = useRef([]);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        let animId;
+        let step = 0;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const size = 190;
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
+        canvas.style.width = `${size}px`;
+        canvas.style.height = `${size}px`;
+
+        const cx = size / 2;
+        const cy = size / 2;
+        const radius = size * 0.44; // ~83.6px sphere radius
+
+        const render = () => {
+          step += isSpeaking ? 0.045 : isRecording ? 0.06 : 0.02;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.save();
+          ctx.scale(dpr, dpr);
+
+          // 1. Canvas UI Force Field Shockwaves on Interaction / Speech
+          for (let i = shockwavesRef.current.length - 1; i >= 0; i--) {
+            const sw = shockwavesRef.current[i];
+            sw.r += 2.8;
+            sw.alpha *= 0.93;
+            if (sw.alpha < 0.02) {
+              shockwavesRef.current.splice(i, 1);
+              continue;
+            }
+            ctx.beginPath();
+            ctx.arc(cx, cy, sw.r, 0, Math.PI * 2);
+            ctx.strokeStyle = sw.color === "ruby"
+              ? `rgba(212, 255, 36, ${sw.alpha})`
+              : `rgba(21, 88, 201, ${sw.alpha})`;
+            ctx.lineWidth = 1.6;
+            ctx.stroke();
+          }
+
+          // 2. Outer Atmospheric Ambient Aura
+          const auraGrad = ctx.createRadialGradient(cx, cy, radius * 0.9, cx, cy, radius * 1.15);
+          if (isRecording) {
+            auraGrad.addColorStop(0, "rgba(212, 255, 36, 0.2)");
+            auraGrad.addColorStop(0.5, "rgba(212, 255, 36, 0.05)");
+            auraGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+          } else {
+            auraGrad.addColorStop(0, "rgba(21, 88, 201, 0.25)");
+            auraGrad.addColorStop(0.5, "rgba(21, 88, 201, 0.07)");
+            auraGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+          }
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
+          ctx.fillStyle = auraGrad;
+          ctx.fill();
+
+          // 3. Clip strictly to Sphere Geometry
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.clip();
+
+          // A. Base obsidian shadow sphere
+          ctx.fillStyle = "#030407";
+          ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+
+          // B. Deep Lower Hemisphere Shadow Bowl
+          const bottomShadow = ctx.createRadialGradient(
+            cx, cy + radius * 0.35, radius * 0.1,
+            cx, cy + radius * 0.25, radius * 0.95
+          );
+          bottomShadow.addColorStop(0, "#010204");
+          bottomShadow.addColorStop(0.55, "#060A14");
+          bottomShadow.addColorStop(1, "#0D182E");
+          ctx.fillStyle = bottomShadow;
+          ctx.fillRect(cx - radius, cy, radius * 2, radius);
+
+          // C. Dynamic Equatorial Horizon Band
+          const bandWobble = isSpeaking
+            ? Math.sin(step * 3) * 1.6
+            : isRecording
+            ? Math.sin(step * 5) * 2.2
+            : Math.sin(step) * 0.6;
+          const bandY = cy + bandWobble;
+
+          const bandGrad = ctx.createLinearGradient(0, bandY - 18, 0, bandY + 32);
+          if (isRecording) {
+            bandGrad.addColorStop(0, "rgba(212, 255, 36, 0)");
+            bandGrad.addColorStop(0.28, "rgba(212, 255, 36, 0.85)");
+            bandGrad.addColorStop(0.55, "rgba(180, 225, 20, 0.95)");
+            bandGrad.addColorStop(0.8, "rgba(120, 160, 10, 0.45)");
+            bandGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+          } else {
+            bandGrad.addColorStop(0, "rgba(21, 88, 201, 0)");
+            bandGrad.addColorStop(0.28, "rgba(45, 130, 255, 0.85)");
+            bandGrad.addColorStop(0.55, "rgba(21, 88, 201, 0.98)");
+            bandGrad.addColorStop(0.8, "rgba(10, 45, 120, 0.55)");
+            bandGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+          }
+
+          ctx.fillStyle = bandGrad;
+          ctx.beginPath();
+          ctx.moveTo(cx - radius, bandY);
+          for (let x = cx - radius; x <= cx + radius; x += 3) {
+            const normX = (x - cx) / radius;
+            const curve = Math.sqrt(Math.max(0, 1 - normX * normX)) * 2.2;
+            const fluid = (isSpeaking || isRecording) ? Math.sin(normX * 5 + step * 4) * 2.0 : 0;
+            ctx.lineTo(x, bandY - 16 + fluid + curve);
+          }
+          for (let x = cx + radius; x >= cx - radius; x -= 3) {
+            const normX = (x - cx) / radius;
+            const curve = Math.sqrt(Math.max(0, 1 - normX * normX)) * 4.2;
+            const fluid = (isSpeaking || isRecording) ? Math.sin(normX * 5 + step * 4 + 1.2) * 2.0 : 0;
+            ctx.lineTo(x, bandY + 32 + fluid + curve);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          // D. Upper Pearl / Satin Chrome Dome
+          const domeGrad = ctx.createRadialGradient(
+            cx,
+            cy - radius * 0.28,
+            radius * 0.08,
+            cx,
+            cy - radius * 0.08,
+            radius * 0.94
+          );
+          domeGrad.addColorStop(0, "#FFFFFF");
+          domeGrad.addColorStop(0.3, "#F4F7FC");
+          domeGrad.addColorStop(0.62, "#D9E3F0");
+          domeGrad.addColorStop(0.88, "#9EB4CE");
+          domeGrad.addColorStop(1, isRecording ? "#829462" : "#637D9E");
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(cx - radius, bandY);
+          ctx.arc(cx, cy, radius, Math.PI, 0, false);
+          for (let x = cx + radius; x >= cx - radius; x -= 3) {
+            const normX = (x - cx) / radius;
+            const fluid = (isSpeaking || isRecording) ? Math.sin(normX * 5 + step * 4) * 1.6 : 0;
+            ctx.lineTo(x, bandY + fluid);
+          }
+          ctx.closePath();
+          ctx.fillStyle = domeGrad;
+          ctx.fill();
+          ctx.restore();
+
+          // E. Soft Horizon Atmospheric Bleed
+          const bleedGrad = ctx.createLinearGradient(0, bandY - 14, 0, bandY + 12);
+          if (isRecording) {
+            bleedGrad.addColorStop(0, "rgba(212, 255, 36, 0)");
+            bleedGrad.addColorStop(0.5, "rgba(212, 255, 36, 0.45)");
+            bleedGrad.addColorStop(1, "rgba(180, 220, 20, 0.88)");
+          } else {
+            bleedGrad.addColorStop(0, "rgba(21, 88, 201, 0)");
+            bleedGrad.addColorStop(0.5, "rgba(21, 88, 201, 0.45)");
+            bleedGrad.addColorStop(1, "rgba(21, 88, 201, 0.92)");
+          }
+          ctx.fillStyle = bleedGrad;
+          ctx.fillRect(cx - radius, bandY - 14, radius * 2, 26);
+
+          // F. Lower Refraction Ground Ambient
+          const underGlow = ctx.createRadialGradient(
+            cx, cy + radius * 0.85, radius * 0.05,
+            cx, cy + radius * 0.6, radius * 0.55
+          );
+          underGlow.addColorStop(0, isRecording ? "rgba(212, 255, 36, 0.15)" : "rgba(21, 88, 201, 0.18)");
+          underGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+          ctx.fillStyle = underGlow;
+          ctx.fillRect(cx - radius, cy + radius * 0.35, radius * 2, radius * 0.65);
+
+          // End of sphere clip
+          ctx.restore();
+
+          // 4. Precision 1.2px Fresnel Perimeter Rim Light
+          const rimGrad = ctx.createLinearGradient(cx, cy - radius, cx, cy + radius);
+          rimGrad.addColorStop(0, "rgba(255, 255, 255, 0.98)");
+          rimGrad.addColorStop(0.36, "rgba(225, 238, 255, 0.75)");
+          rimGrad.addColorStop(0.5, isRecording ? "rgba(212, 255, 36, 1.0)" : "rgba(85, 160, 255, 1.0)");
+          rimGrad.addColorStop(0.66, isRecording ? "rgba(180, 225, 20, 0.65)" : "rgba(21, 88, 201, 0.65)");
+          rimGrad.addColorStop(0.86, "rgba(40, 75, 140, 0.4)");
+          rimGrad.addColorStop(1, "rgba(255, 255, 255, 0.22)");
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = rimGrad;
+          ctx.lineWidth = 1.3;
+          ctx.stroke();
+
+          ctx.restore();
+          animId = requestAnimationFrame(render);
+        };
+
+        animId = requestAnimationFrame(render);
+        return () => cancelAnimationFrame(animId);
+      }, [isSpeaking, isRecording]);
+
+      const handleOrbClick = (e) => {
+        // Trigger Canvas UI Force Field Shockwave
+        shockwavesRef.current.push({
+          r: 25,
+          alpha: 1.0,
+          color: isRecording ? "ruby" : "mint"
+        });
+        if (onClick) onClick(e);
+      };
+
+      return (
+        <div className="ai-companion-stage">
+          <div
+            className="canvas-ai-orb-anchor"
+            onClick={handleOrbClick}
+            title="Canvas UI Interactive Orb — Click to advance conversational turn"
+          >
+            <canvas ref={canvasRef} className="canvas-orb-element" />
+          </div>
+
+          <div className="orb-state-chip">
+            <span className="pulsing-dot"></span>
+            <span>
+              {isSpeaking
+                ? "COMPANION REASONING & SPEAKING"
+                : isRecording
+                ? "LISTENING TO MICROPHONE INPUT..."
+                : "SYNCUP COMPANION READY // INTERACTION ACTIVE"}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // ========================================================
+    // Enterprise Incident Scenarios for SyncUp Problem Intake
+    // ========================================================
+    const INCIDENT_SCENARIOS = [
+      {
+        id: "logistics_scanners",
+        ticketId: "INC-8492",
+        title: "Warehouse Logistics - Scanner Freeze",
+        subtitle: "Zone B Handheld Terminals Failing on Batch QR Ingestion",
+        department: "Supply Chain & Fulfillment IT",
+        targetDepartment: "IT Hardware Infrastructure",
+        reporter: {
+          name: "Marcus Vance",
+          role: "Floor Operations Supervisor",
+          location: "Dallas Distribution Center #4",
+          shift: "Night Shift (19:00 - 04:00)"
+        },
+        urgency: 5,
+        sufficientDetail: 0.96,
+        matchedSop: "SOP-WMS-402: Emergency Rollback Procedure for Zebra TC57 Terminals",
+        impact: "SLA Risk: $18,500/hr delay penalty • 420 orders at risk",
+        initialReport: "Hey SyncUp, our pickers in Zone B are at a total standstill. All 24 handheld barcode scanners started freezing up at 23:45 whenever they scan batches with QR prefix 'PR-'. Power cycling only works for one scan before it locks up with a MEM_ALLOC_FAIL error. We have trucks leaving in 2 hours and 400 orders in the backlog.",
+        initialAgentQuestion: "I hear the urgency, Marcus—halting 24 pickers before truck departure is high stakes. Can you tell me: did this start immediately after the 22:00 WMS maintenance window, and are any units in Zone A or C having this same issue?",
+        claims: [
+          { id: 1, text: "All 24 Zone B handheld scanners freezing on QR prefix 'PR-'", type: "observed_fact", confidence: 0.98 },
+          { id: 2, text: "Scanners lock up with MEM_ALLOC_FAIL error code", type: "observed_fact", confidence: 0.97 },
+          { id: 3, text: "Zone A scanners on 1D barcodes are functioning normally", type: "observed_fact", confidence: 0.95 },
+          { id: 4, text: "WMS 22:00 maintenance firmware update altered buffer size", type: "user_hypothesis", confidence: 0.91 },
+          { id: 5, text: "Whether Zone C is experiencing the same QR scan crash", type: "critical_unknown", confidence: 0.94 },
+          { id: 6, text: "Whether OTA Wi-Fi rollback is supported without physical docking", type: "critical_unknown", confidence: 0.96 }
+        ]
+      },
+      {
+        id: "fintech_checkout",
+        ticketId: "INC-7721",
+        title: "FinTech Platform - Checkout 504 Spikes",
+        subtitle: "Tier-1 Merchant Gateway Timeouts on Apple Pay Ingestion",
+        department: "Payments & Core Engineering",
+        targetDepartment: "Payments Core Engineering",
+        reporter: {
+          name: "Siddharth Rao",
+          role: "Lead Merchant Support Engineer",
+          location: "San Francisco HQ",
+          shift: "European Trading Window"
+        },
+        urgency: 5,
+        sufficientDetail: 0.94,
+        matchedSop: "SOP-PAY-118: Cross-Region Gateway Failover for EU-Central-1",
+        impact: "Critical: Tier-1 SLA Penalty ($45,000/hr) • €230,000 carts at risk",
+        initialReport: "SyncUp, our enterprise client Lumina Retail is reporting that 30% of their checkout requests are failing with HTTP 504 Gateway Timeouts. Their customer support queue has spiked by 200 tickets in the last 20 minutes.",
+        initialAgentQuestion: "Understood Siddharth. Are the 504 timeouts isolated to a specific payment method or geography, and what latency are you observing on the upstream acquiring bank connector?",
+        claims: [
+          { id: 1, text: "30% of Lumina Retail checkout attempts failing with 504 Timeouts", type: "observed_fact", confidence: 0.97 },
+          { id: 2, text: "Failures isolated to Apple Pay tokens via Frankfurt gateway", type: "observed_fact", confidence: 0.93 },
+          { id: 3, text: "Direct credit card entries are passing smoothly", type: "observed_fact", confidence: 0.99 },
+          { id: 4, text: "Token decryption microservice throttling after morning deploy", type: "user_hypothesis", confidence: 0.88 },
+          { id: 5, text: "Traffic reroute to London secondary gateway not yet executed", type: "observed_fact", confidence: 0.95 },
+          { id: 6, text: "Whether other European merchants are experiencing degradation", type: "critical_unknown", confidence: 0.96 }
+        ]
+      },
+      {
+        id: "healthcare_emr",
+        ticketId: "INC-9104",
+        title: "Hospital ICU - EMR Sync Lag",
+        subtitle: "Nurse Tablet Vital Signs Failing to Replicate to Central Station",
+        department: "Clinical Informatics & Health Tech",
+        targetDepartment: "Clinical Engineering Urgent",
+        reporter: {
+          name: "Nurse Elena Rostova",
+          role: "Charge Nurse, ICU Ward 4",
+          location: "St. Jude Metro Medical Center",
+          shift: "Night Shift"
+        },
+        urgency: 5,
+        sufficientDetail: 0.98,
+        matchedSop: "SOP-CLIN-009: ICU Telemetry Network Redundancy Protocol",
+        impact: "High Priority: Level 1 Clinical Alert • 8 ICU Beds Affected",
+        initialReport: "SyncUp, our bedside tablets in ICU Ward 4 aren't pushing patient vitals to the telemetry central nurses' station. We entered telemetry stats 15 minutes ago and the central screens are still showing 'Awaiting Data'.",
+        initialAgentQuestion: "Nurse Elena, this is vital for patient safety. Are the local bedside monitors sounding their own physical alarms if vitals cross critical thresholds, and is this affecting all 12 beds in ICU-4?",
+        claims: [
+          { id: 1, text: "Local bedside Philips monitors alarm properly and independently", type: "observed_fact", confidence: 0.99 },
+          { id: 2, text: "Central telemetry station blank for beds 401 through 408", type: "observed_fact", confidence: 0.98 },
+          { id: 3, text: "South wing beds 409-412 replicating normally", type: "observed_fact", confidence: 0.94 },
+          { id: 4, text: "Corridor 4A Wi-Fi access point dropped offline", type: "user_hypothesis", confidence: 0.85 },
+          { id: 5, text: "Manual bedside paper logging initiated with 2 float nurses", type: "observed_fact", confidence: 0.97 },
+          { id: 6, text: "Whether VLAN 40 medical Wi-Fi controller reports reboot loops", type: "critical_unknown", confidence: 0.95 }
+        ]
+      }
+    ];
+
+    // ========================================================
+    // Main Studio Workspace Component: Voice Problem Intake Agent
+    // ========================================================
+    function App() {
+      const [scenarioIdx, setScenarioIdx] = useState(0);
+      const activeScenario = INCIDENT_SCENARIOS[scenarioIdx];
+
+      const [isSpeaking, setIsSpeaking] = useState(false);
+      const [isRecording, setIsRecording] = useState(false);
+      const [isHandsFree, setIsHandsFree] = useState(true); // Continuous hands-free voice mode
+      const [isSoundOn, setIsSoundOn] = useState(true);
+      const [inputMsg, setInputMsg] = useState("");
+      const [isDispatched, setIsDispatched] = useState(false);
+
+      const [conversation, setConversation] = useState([
+        {
+          role: "reporter",
+          sender: INCIDENT_SCENARIOS[0].reporter.name,
+          body: INCIDENT_SCENARIOS[0].initialReport
+        },
+        {
+          role: "agent",
+          sender: "SyncUp Intake Agent",
+          body: INCIDENT_SCENARIOS[0].initialAgentQuestion
+        }
+      ]);
+
+      const [claims, setClaims] = useState(INCIDENT_SCENARIOS[0].claims);
+      const [sufficientDetail, setSufficientDetail] = useState(INCIDENT_SCENARIOS[0].sufficientDetail);
+      const [toastMsg, setToastMsg] = useState(null);
+
+      const chatScrollRef = useRef(null);
+      const recognitionRef = useRef(null);
+      const selectedVoiceRef = useRef(null);
+      const isHandsFreeRef = useRef(true);
+      const isSpeakingRef = useRef(false);
+      const isCallActiveRef = useRef(true);
+
+      // Keep refs updated for event handlers
+      useEffect(() => {
+        isHandsFreeRef.current = isHandsFree;
+      }, [isHandsFree]);
+
+      useEffect(() => {
+        isSpeakingRef.current = isSpeaking;
+      }, [isSpeaking]);
+
+      // Auto-scroll chat stream
+      useEffect(() => {
+        if (chatScrollRef.current) {
+          chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+        }
+      }, [conversation]);
+
+      // Switch Scenario
+      const handleSelectScenario = (idx) => {
+        setScenarioIdx(idx);
+        const sc = INCIDENT_SCENARIOS[idx];
+        setConversation([
+          {
+            role: "reporter",
+            sender: sc.reporter.name,
+            body: sc.initialReport
+          },
+          {
+            role: "agent",
+            sender: "SyncUp Intake Agent",
+            body: sc.initialAgentQuestion
+          }
+        ]);
+        setClaims(sc.claims);
+        setSufficientDetail(sc.sufficientDetail);
+        setIsDispatched(false);
+        showToast(`Loaded: ${sc.title}`);
+        speakAloud(sc.initialAgentQuestion);
+      };
+
+      // Auto-select pleasant natural voice under the hood
+      useEffect(() => {
+        if (!("speechSynthesis" in window)) return;
+
+        const autoSelectNaturalVoice = () => {
+          const all = window.speechSynthesis.getVoices();
+          if (!all || all.length === 0) return;
+
+          const pleasantPatterns = [
+            /google uk english female/i,
+            /natural/i,
+            /neural/i,
+            /samantha/i,
+            /victoria/i,
+            /serena/i,
+            /jenny/i,
+            /aria/i,
+            /google us english/i
+          ];
+
+          let chosen = null;
+          for (const pattern of pleasantPatterns) {
+            chosen = all.find(v => pattern.test(v.name));
+            if (chosen) break;
+          }
+          if (!chosen) {
+            chosen = all.find(v => v.lang.startsWith("en")) || all[0];
+          }
+          selectedVoiceRef.current = chosen;
+        };
+
+        autoSelectNaturalVoice();
+        window.speechSynthesis.onvoiceschanged = autoSelectNaturalVoice;
+        return () => {
+          window.speechSynthesis.onvoiceschanged = null;
+        };
+      }, []);
+
+      // Continuous Hands-Free Speech Recognition
+      useEffect(() => {
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRec) return;
+
+        const rec = new SpeechRec();
+        rec.continuous = false; // We manage seamless turn-taking
+        rec.interimResults = false;
+        rec.lang = "en-US";
+
+        rec.onstart = () => {
+          setIsRecording(true);
+        };
+
+        rec.onend = () => {
+          setIsRecording(false);
+          // If hands-free is active and agent is NOT speaking, auto-restart listening
+          if (isHandsFreeRef.current && !isSpeakingRef.current && isCallActiveRef.current) {
+            setTimeout(() => {
+              try {
+                rec.start();
+              } catch (e) {}
+            }, 350);
+          }
+        };
+
+        rec.onerror = (e) => {
+          setIsRecording(false);
+          if (e.error !== "not-allowed" && isHandsFreeRef.current && !isSpeakingRef.current && isCallActiveRef.current) {
+            setTimeout(() => {
+              try {
+                rec.start();
+              } catch (err) {}
+            }, 800);
+          }
+        };
+
+        rec.onresult = (e) => {
+          const transcript = e.results[0][0].transcript;
+          if (transcript && transcript.trim()) {
+            handleSendUserMessage(transcript.trim());
+          }
+        };
+
+        recognitionRef.current = rec;
+
+        // Auto-start listening on mount if hands-free
+        try {
+          rec.start();
+        } catch (e) {}
+
+        return () => {
+          isCallActiveRef.current = false;
+          try {
+            rec.stop();
+          } catch (e) {}
+        };
+      }, []);
+
+      const showToast = (txt) => {
+        setToastMsg(txt);
+        setTimeout(() => setToastMsg(null), 3400);
+      };
+
+      // Voice Output Function with Hands-Free Turn-Taking
+      const speakAloud = (text) => {
+        if (!isSoundOn || !("speechSynthesis" in window)) {
+          setIsSpeaking(true);
+          setTimeout(() => {
+            setIsSpeaking(false);
+            if (isHandsFreeRef.current && recognitionRef.current) {
+              try { recognitionRef.current.start(); } catch (e) {}
+            }
+          }, 2200);
+          return;
+        }
+
+        try {
+          window.speechSynthesis.cancel();
+          // Pause recognition during speech output to avoid self-echo
+          try { recognitionRef.current?.stop(); } catch (e) {}
+
+          const utter = new SpeechSynthesisUtterance(text);
+          if (selectedVoiceRef.current) {
+            utter.voice = selectedVoiceRef.current;
+          }
+
+          utter.pitch = 1.0;
+          utter.rate = 0.96; // Pleasant, calm, unhurried cadence
+          utter.volume = 1.0;
+
+          utter.onstart = () => {
+            setIsSpeaking(true);
+          };
+
+          utter.onend = () => {
+            setIsSpeaking(false);
+            // Hands-Free: automatically resume listening for user's next words!
+            if (isHandsFreeRef.current && recognitionRef.current) {
+              setTimeout(() => {
+                try {
+                  recognitionRef.current.start();
+                } catch (e) {}
+              }, 300);
+            }
+          };
+
+          utter.onerror = () => {
+            setIsSpeaking(false);
+            if (isHandsFreeRef.current && recognitionRef.current) {
+              setTimeout(() => {
+                try { recognitionRef.current.start(); } catch (e) {}
+              }, 300);
+            }
+          };
+
+          window.speechSynthesis.speak(utter);
+        } catch (e) {
+          setIsSpeaking(true);
+          setTimeout(() => setIsSpeaking(false), 2000);
+        }
+      };
+
+      // Toggle Hands-Free Microphone
+      const handleToggleMicrophone = () => {
+        if (!recognitionRef.current) {
+          showToast("Microphone not available in this browser");
+          return;
+        }
+
+        if (isRecording) {
+          setIsHandsFree(false);
+          recognitionRef.current.stop();
+          setIsRecording(false);
+          showToast("Hands-Free Voice: Paused");
+        } else {
+          setIsHandsFree(true);
+          try {
+            recognitionRef.current.start();
+            showToast("Hands-Free Voice: Listening continuously");
+          } catch (e) {
+            try {
+              recognitionRef.current.stop();
+              setTimeout(() => recognitionRef.current.start(), 200);
+            } catch (err) {}
+          }
+        }
+      };
+
+      // Process User Spoken or Typed Message during Triage
+      const handleSendUserMessage = (textToSend) => {
+        const text = textToSend || inputMsg;
+        if (!text.trim()) return;
+
+        // Add user response to stream
+        setConversation((prev) => [
+          ...prev,
+          {
+            role: "reporter",
+            sender: activeScenario.reporter.name,
+            body: text
+          }
+        ]);
+        setInputMsg("");
+
+        // Dynamically extract claims & formulate Socratic intake question
+        const lower = text.toLowerCase();
+        let followUpQuestion = "";
+        let newClaim = null;
+
+        if (lower.includes("firmware") || lower.includes("update") || lower.includes("deploy")) {
+          newClaim = {
+            id: Date.now(),
+            text: `Investigating firmware/deployment correlation from caller report: "${text.slice(0, 75)}..."`,
+            type: "user_hypothesis",
+            confidence: 0.93
+          };
+          followUpQuestion = "Noted on the update. Do you have physical access to the server switch racks right now, or is there an on-call network engineer available to initiate an OTA rollback?";
+        } else if (lower.includes("zone") || lower.includes("scanner") || lower.includes("fail") || lower.includes("freeze")) {
+          newClaim = {
+            id: Date.now(),
+            text: `Confirmed failure scope: "${text.slice(0, 75)}..."`,
+            type: "observed_fact",
+            confidence: 0.97
+          };
+          followUpQuestion = "Understood. What is the current operational fallback on the floor—are teams manually cataloging, and what is your hard deadline before shipping trucks depart?";
+        } else if (lower.includes("manual") || lower.includes("time") || lower.includes("slow") || lower.includes("paper")) {
+          newClaim = {
+            id: Date.now(),
+            text: `Contingency bottleneck active: manual processing in place`,
+            type: "observed_fact",
+            confidence: 0.96
+          };
+          followUpQuestion = "I have sufficient operational clarity to formulate the priority escalation ticket. Should I proceed to dispatch this ticket directly to on-call Engineering with P1 priority?";
+        } else {
+          followUpQuestion = "I've logged those details. Are there any secondary systems or adjacent teams affected by this same incident?";
+        }
+
+        if (newClaim) {
+          setClaims((prev) => [newClaim, ...prev]);
+          setSufficientDetail((prev) => Math.min(1.0, prev + 0.03));
+        }
+
+        // Agent speaks and responds
+        setTimeout(() => {
+          setConversation((prev) => [
+            ...prev,
+            {
+              role: "agent",
+              sender: "SyncUp Intake Agent",
+              body: followUpQuestion
+            }
+          ]);
+          speakAloud(followUpQuestion);
+        }, 600);
+      };
+
+      // Dispatch Ticket Action
+      const handleDispatchTicket = () => {
+        setIsDispatched(true);
+        const confirmMsg = `Ticket ${activeScenario.ticketId} has been successfully dispatched to ${activeScenario.targetDepartment} with P1 Priority. On-call incident commander paged via pager duty.`;
+        setConversation((prev) => [
+          ...prev,
+          {
+            role: "agent",
+            sender: "SyncUp Intake Agent",
+            body: confirmMsg
+          }
+        ]);
+        speakAloud(confirmMsg);
+        showToast(`🚀 Ticket ${activeScenario.ticketId} Dispatched to IT!`);
+      };
+
+      return (
+        <div>
+          {/* Canvas UI: Ambient Reactive Particle Field (Pattern #75) */}
+          <CanvasParticleField />
+
+          {/* Inspira UI: Ambient Meteors Background */}
+          <Meteors count={16} />
+
+          {/* Header Bar: Clean Branding + Sound Toggle (NO voice select dropdown) */}
+          <header className="hume-nav">
+            <div className="brand-group">
+              <div className="brand-orb-icon">✦</div>
+              <div>
+                <h1 className="brand-title">SyncUp</h1>
+                <p className="brand-subtitle">Voice Problem Intake & Incident Triage Agent</p>
+              </div>
+            </div>
+
+            <div className="nav-right-cluster">
+              {/* Hands-Free Live Status Pill */}
+              <div className="handsfree-status-badge">
+                <span className="live-dot-green"></span>
+                <span>{isHandsFree ? "HANDS-FREE AUTO-AUDIO ON" : "HANDS-FREE MUTED"}</span>
+              </div>
+
+              {/* Sound Output Toggle */}
+              <button
+                className={`audio-toggle-btn ${isSoundOn ? "active" : ""}`}
+                onClick={() => {
+                  setIsSoundOn(!isSoundOn);
+                  if (isSoundOn && "speechSynthesis" in window) window.speechSynthesis.cancel();
+                  showToast(isSoundOn ? "Voice Output Muted" : "Voice Output Enabled");
+                }}
+                title="Toggle Voice Speech Output"
+              >
+                <span>{isSoundOn ? "🔊 Voice ON" : "🔇 Voice Muted"}</span>
+              </button>
+            </div>
+          </header>
+
+          {/* MAIN WORKSPACE: Left (Voice Agent + Chat Under It) | Right (Ticket Dossier) */}
+          <main className="core-interaction-viewport">
+            {/* ========================================================
+               LEFT COLUMN: Voice Agent Stage + Call Transcript Under It
+               ======================================================== */}
+            <section className="voice-call-column" aria-label="Live Voice Call & Transcript">
+              {/* Top: Voice Agent Sphere Stage */}
+              <div className="voice-agent-stage-header">
+                <div className="voice-agent-meta-row">
+                  <span className="live-call-pill">
+                    <span className="live-pulsing-node"></span>
+                    LIVE INCIDENT CALL
+                  </span>
+                  <span className="caller-id-pill">
+                    CALLER: {activeScenario.reporter.name} ({activeScenario.reporter.location})
+                  </span>
+                </div>
+
+                {/* 3D Metallic Horizon AI Sphere */}
+                <div className="stage-sphere-wrapper">
+                  <CanvasFluidOrb
+                    isSpeaking={isSpeaking}
+                    isRecording={isRecording}
+                    onClick={() => {
+                      showToast("Voice Agent listening hands-free");
+                    }}
+                  />
+                </div>
+
+                {/* Audio Frequency Waveform Visualizer */}
+                <div className="voice-spectrum-visualizer" aria-label="Live Audio Frequency Spectrum">
+                  {[0.4, 0.7, 1.0, 0.6, 0.9, 0.5, 0.8, 1.0, 0.6, 0.4, 0.8, 0.5].map((h, idx) => (
+                    <span
+                      key={idx}
+                      className={`spectrum-bar ${isSpeaking ? "speaking" : isRecording ? "recording" : ""}`}
+                      style={{
+                        animationDelay: `${idx * 0.1}s`,
+                        height: isSpeaking ? `${Math.max(14, h * 38)}px` : isRecording ? `${Math.max(12, h * 32)}px` : "8px"
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <p className="voice-agent-turn-hint">
+                  {isSpeaking
+                    ? "SyncUp speaking aloud..."
+                    : isRecording
+                    ? "Listening continuously... speak naturally without clicking"
+                    : "Hands-free listening ready. Speak into microphone"}
+                </p>
+              </div>
+
+              {/* Middle: Live Call Transcript / Chat Section DIRECTLY UNDER VOICE AGENT */}
+              <div className="voice-call-stream-container">
+                <div className="transcript-section-bar">
+                  <span className="transcript-title">💬 Live Call Transcript & Dialogue</span>
+                  <span className="transcript-meta">Auto-Transcribed</span>
+                </div>
+
+                <div className="core-chat-stream" ref={chatScrollRef} role="log" aria-live="polite">
+                  {conversation.map((msg, i) => (
+                    <div key={i} className={`chat-message-bubble ${msg.role}`}>
+                      <div className="bubble-avatar-badge">
+                        {msg.role === "agent" ? "✦" : "👤"}
+                      </div>
+                      <div className="bubble-content-card">
+                        <div className="bubble-sender-row">
+                          <span className="bubble-author">{msg.sender}</span>
+                          <span className="bubble-role-tag">{msg.role === "agent" ? "INTAKE AGENT" : "REPORTER"}</span>
+                        </div>
+                        <p className="bubble-text">{msg.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bottom: Hands-Free Voice & Input Command Dock */}
+              <form
+                className="voice-call-dock"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendUserMessage();
+                }}
+              >
+                {/* Hands-Free Toggle / Mic Status Button */}
+                <button
+                  type="button"
+                  className={`dock-mic-btn ${isRecording ? "recording" : ""}`}
+                  onClick={handleToggleMicrophone}
+                  title={isRecording ? "Click to pause hands-free mic" : "Click to activate hands-free mic"}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" x2="12" y1="19" y2="22"/>
+                  </svg>
+                </button>
+
+                {/* Text Fallback Input */}
+                <input
+                  type="text"
+                  className="dock-text-input"
+                  placeholder={isRecording ? "Listening hands-free... speak now or type here..." : "Type a message or speak..."}
+                  value={inputMsg}
+                  onChange={(e) => setInputMsg(e.target.value)}
+                />
+
+                {/* Send Button */}
+                <button
+                  type="submit"
+                  className="dock-send-btn"
+                  title="Send input"
+                >
+                  <span>Send</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+              </form>
+            </section>
+
+            {/* ========================================================
+               RIGHT COLUMN: Live Ticket & Problem Intake Dossier
+               ======================================================== */}
+            <aside className="ticket-dossier-column" aria-label="Live Incident Ticket Dossier">
+              {/* Ticket Header & Status Pill */}
+              <div className="ticket-header-strip">
+                <div className="ticket-id-tag">
+                  <span className="ticket-number">TICKET #{activeScenario.ticketId}</span>
+                  <span className={`ticket-status-pill ${isDispatched ? "dispatched" : "p1-urgent"}`}>
+                    <span className="ruby-strobe-circle"></span>
+                    {isDispatched ? "DISPATCHED TO IT" : "P1 - CRITICAL ESCALATION"}
+                  </span>
+                </div>
+
+                {/* Scenario Switcher Tabs */}
+                <div className="scenario-switcher-row">
+                  {INCIDENT_SCENARIOS.map((sc, i) => (
+                    <button
+                      key={sc.id}
+                      type="button"
+                      className={`scenario-tab-btn ${scenarioIdx === i ? "active" : ""}`}
+                      onClick={() => handleSelectScenario(i)}
+                    >
+                      {i === 0 ? "📦 Warehouse" : i === 1 ? "💳 FinTech" : "🏥 Hospital"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Caller & Incident Title Card */}
+              <div className="dossier-incident-card">
+                <h3 className="incident-headline">{activeScenario.title}</h3>
+                <p className="incident-subline">{activeScenario.subtitle}</p>
+                <div className="incident-meta-chips">
+                  <span>👤 {activeScenario.reporter.name}</span>
+                  <span>📍 {activeScenario.reporter.location}</span>
+                  <span>🏷️ {activeScenario.department}</span>
+                </div>
+              </div>
+
+              {/* Intake Completeness & Urgency Metric Grid */}
+              <div className="dossier-metric-grid">
+                <div className="metric-cell">
+                  <span className="metric-label">DETAIL CAPTURED</span>
+                  <span className="metric-val">{(sufficientDetail * 100).toFixed(0)}%</span>
+                  <div className="progress-bar-track">
+                    <div className="progress-bar-fill" style={{ width: `${sufficientDetail * 100}%` }}></div>
+                  </div>
+                </div>
+                <div className="metric-cell">
+                  <span className="metric-label">URGENCY SCORE</span>
+                  <span className="metric-val text-ruby">{activeScenario.urgency} / 5</span>
+                  <span className="metric-sub">Max Priority</span>
+                </div>
+                <div className="metric-cell">
+                  <span className="metric-label">TARGET DEPT</span>
+                  <span className="metric-val truncate">{activeScenario.targetDepartment.replace("Infrastructure", "")}</span>
+                  <span className="metric-sub">On-Call Routing</span>
+                </div>
+              </div>
+
+              {/* Epistemic Triad Stream: Triaged Claims */}
+              <div className="epistemic-stream-deck">
+                <div className="triad-group facts-group">
+                  <div className="triad-group-header">
+                    <span>🟢 VERIFIED FACTS ({claims.filter(c => c.type === "observed_fact").length})</span>
+                    <span className="triad-sub">Confirmed by Caller</span>
+                  </div>
+                  {claims.filter(c => c.type === "observed_fact").map(c => (
+                    <div key={c.id} className="claim-item-row fact">
+                      <span className="bullet">✓</span>
+                      <p className="claim-text">{c.text}</p>
+                      <span className="confidence-chip">{(c.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="triad-group unknowns-group">
+                  <div className="triad-group-header">
+                    <span>🔴 CRITICAL UNKNOWNS ({claims.filter(c => c.type === "critical_unknown").length})</span>
+                    <span className="triad-sub">Triage Gaps</span>
+                  </div>
+                  {claims.filter(c => c.type === "critical_unknown").map(c => (
+                    <div key={c.id} className="claim-item-row unknown">
+                      <span className="bullet">?</span>
+                      <p className="claim-text">{c.text}</p>
+                      <span className="confidence-chip unknown">{(c.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="triad-group hypotheses-group">
+                  <div className="triad-group-header">
+                    <span>🟡 CALLER HYPOTHESES ({claims.filter(c => c.type === "user_hypothesis").length})</span>
+                    <span className="triad-sub">Working Theories</span>
+                  </div>
+                  {claims.filter(c => c.type === "user_hypothesis").map(c => (
+                    <div key={c.id} className="claim-item-row hypothesis">
+                      <span className="bullet">⚡</span>
+                      <p className="claim-text">{c.text}</p>
+                      <span className="confidence-chip hypothesis">{(c.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Matched Company SOP & Impact */}
+              <div className="dossier-sop-card">
+                <div className="sop-title-row">
+                  <span className="sop-badge">MATCHED SOP</span>
+                  <span className="sop-name">{activeScenario.matchedSop}</span>
+                </div>
+                <p className="sop-impact">⚠️ {activeScenario.impact}</p>
+              </div>
+
+              {/* Escalation Action Dock */}
+              <div className="dossier-dispatch-dock">
+                <button
+                  type="button"
+                  className={`dispatch-ticket-btn ${isDispatched ? "dispatched" : ""}`}
+                  onClick={handleDispatchTicket}
+                  disabled={isDispatched}
+                >
+                  {isDispatched ? "✅ Ticket Dispatched to IT On-Call" : "🚀 Dispatch Ticket & Escalate to IT Infrastructure"}
+                </button>
+              </div>
+            </aside>
+          </main>
+
+          {/* Floating Glass Toast */}
+          {toastMsg && <div className="hume-toast">{toastMsg}</div>}
+        </div>
+      );
+    }
+
+    // Mount to DOM
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
