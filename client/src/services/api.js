@@ -1,11 +1,11 @@
 /**
  * SyncUp Full Stack Client - API Service
  * Interacts with the backend Express server via Vite proxy (/api)
- * Backed by persistent SQLite database & Two-Brain AI pipeline
+ * Backed by persistent SQLite database & OpenAI Decisions API (GPT-6 Luna)
  */
 
 export const api = {
-  // Fetch list of scenarios / tickets from persistent database
+  // Fetch list of tickets from persistent database
   async getScenarios() {
     try {
       const res = await fetch('/api/incidents/tickets');
@@ -45,18 +45,30 @@ export const api = {
     }
   },
 
-  // Evaluate decisions / epistemic claims via OpenAI Decisions
-  async evaluateDecisions(payload) {
+  // Evaluate decisions in parallel via OpenAI Decisions API (model: gpt-6-luna)
+  async evaluateDecisions(input, questions) {
     try {
       const res = await fetch('/api/decisions/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ input, questions })
       });
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       return await res.json();
     } catch (err) {
       console.warn('API evaluateDecisions fallback:', err.message);
+      return null;
+    }
+  },
+
+  // Mint ephemeral token for OpenAI Realtime Voice WebRTC
+  async getRealtimeSession() {
+    try {
+      const res = await fetch('/api/decisions/realtime-session', { method: 'POST' });
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('API getRealtimeSession fallback:', err.message);
       return null;
     }
   },
