@@ -1,4 +1,6 @@
 import React from 'react';
+import ShimmerText from './ShimmerText';
+import BorderBeam from './BorderBeam';
 
 export default function HeaderNav({ handsFree, onToggleHandsFree, isSpeaking, isListening }) {
   return (
@@ -12,13 +14,24 @@ export default function HeaderNav({ handsFree, onToggleHandsFree, isSpeaking, is
           </svg>
         </div>
         <div className="brand-text">
-          <span className="brand-name">SyncUp</span>
+          <span className="brand-name">
+            <ShimmerText shimmerColor="#D4FF24" baseColor="#FFFFFF" duration={4}>
+              SyncUp
+            </ShimmerText>
+          </span>
           <span className="brand-sub">Incident Triage Intelligence</span>
         </div>
       </div>
 
       <div className="nav-center-status">
         <div className={`status-pill ${isSpeaking ? 'speaking' : isListening ? 'listening' : ''}`}>
+          <BorderBeam
+            size={90}
+            duration={5}
+            colorFrom={isListening ? '#D4FF24' : '#1558C9'}
+            colorTo={isListening ? '#55A0FF' : '#79B0FF'}
+            borderWidth={1}
+          />
           <span className="live-indicator-dot"></span>
           <span className="status-label">
             {isSpeaking ? 'Agent Speaking' : isListening ? 'Hands-Free Listening' : 'Continuous Sync Active'}

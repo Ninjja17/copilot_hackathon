@@ -25,6 +25,26 @@ export default function HandsFreeDock({
         </div>
       )}
 
+      {/* Quick Frontline Operational Responses */}
+      <div className="quick-suggestions-stream" aria-label="Quick conversational responses">
+        {[
+          "Zone A scanners work fine on 1D barcodes",
+          "Issue began right after 22:00 WMS update",
+          "400 orders at risk, trucks depart in 90 mins",
+          "Need OTA firmware rollback immediately"
+        ].map((chip, idx) => (
+          <button
+            key={idx}
+            type="button"
+            className="quick-reply-pill"
+            onClick={() => onSendMessage(chip)}
+            title={`Send quick update: "${chip}"`}
+          >
+            <span>💬</span> {chip}
+          </button>
+        ))}
+      </div>
+
       <form onSubmit={handleSubmit} className="input-toolbar-row">
         <button
           type="button"
@@ -38,6 +58,14 @@ export default function HandsFreeDock({
             <line x1="12" x2="12" y1="19" y2="22"/>
           </svg>
           <span className="mic-label">{handsFree ? 'HANDS-FREE ON' : 'MIC PAUSED'}</span>
+          {handsFree && (
+            <div className="mic-mini-visualizer" aria-hidden="true">
+              <span className="mini-bar b1"></span>
+              <span className="mini-bar b2"></span>
+              <span className="mini-bar b3"></span>
+              <span className="mini-bar b4"></span>
+            </div>
+          )}
         </button>
 
         <input

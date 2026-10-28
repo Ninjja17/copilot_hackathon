@@ -1,6 +1,7 @@
 /* ==========================================================================
-   SyncUp: Seamless High-End Problem Intake & Incident Triage System
+   SyncUp: Seamless 70/30 Frontline Problem Intake & Escalation System
    Aesthetic Architecture:
+   - 70/30 RATIO: Left Column (Voice Hero + Wide Chat) ~70%, Right Column (Sidebar) ~30%
    - STRICT 60-30-10 PALETTE:
      • 60% #030407 (Obsidian Void)
      • 30% #1558C9 (Electric Cobalt Blue)
@@ -88,16 +89,14 @@ html, body {
   background: var(--cobalt-primary);
 }
 
-/* ==========================================================================
-   Header Navigation Bar (Clean, Floating, Seamless)
-   ========================================================================== */
+/* Header Navigation Bar */
 .hume-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  height: 54px;
-  background: rgba(3, 4, 7, 0.88);
+  height: 52px;
+  background: rgba(3, 4, 7, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--cobalt-hairline);
@@ -145,7 +144,6 @@ html, body {
   gap: 14px;
 }
 
-/* Hands-Free Live Status Pill */
 .handsfree-status-badge {
   display: inline-flex;
   align-items: center;
@@ -204,18 +202,18 @@ html, body {
 }
 
 /* ==========================================================================
-   Main 2-Column Incident Intake Workspace (NO BOXES, Seamless Split)
+   70 / 30 Asymmetric Layout (Primary Hero ~70%, Sidebar ~30%)
    ========================================================================== */
 .core-interaction-viewport {
-  max-width: 1560px;
+  max-width: 1600px;
   width: 100%;
   margin: 0 auto;
-  padding: 12px 28px 16px 28px;
+  padding: 10px 24px 14px 24px;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(420px, 1fr);
-  gap: 36px;
-  height: calc(100vh - 54px);
-  max-height: calc(100vh - 54px);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 370px);
+  gap: 28px;
+  height: calc(100vh - 52px);
+  max-height: calc(100vh - 52px);
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -224,14 +222,13 @@ html, body {
   .core-interaction-viewport {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
-    gap: 16px;
+    gap: 14px;
     padding: 8px 14px;
   }
 }
 
 /* ==========================================================================
-   LEFT COLUMN: Voice Agent Stage + Clean Live Transcript Underneath
-   (ZERO BOX CONTAINER - Pure Floating Atmosphere)
+   LEFT COLUMN (~70%): Voice Agent Stage + Generous Chat Window Underneath
    ========================================================================== */
 .voice-call-column {
   display: flex;
@@ -240,29 +237,27 @@ html, body {
   max-height: 100%;
   min-height: 0;
   overflow: hidden;
-  background: transparent; /* Box removed! */
-  border: none;             /* Box border removed! */
+  background: transparent;
+  border: none;
   border-radius: 0;
-  box-shadow: none;         /* Box shadow removed! */
+  box-shadow: none;
   position: relative;
   padding-right: 18px;
 }
 
-/* Ambient vertical divider between left and right column */
 .voice-call-column::after {
   content: '';
   position: absolute;
-  top: 10px;
-  bottom: 10px;
+  top: 8px;
+  bottom: 8px;
   right: 0;
   width: 1px;
   background: linear-gradient(180deg, transparent 0%, var(--cobalt-hairline) 20%, var(--cobalt-hairline) 80%, transparent 100%);
 }
 
-/* Top: Voice Stage Header (Live Call Pill & Caller Profile) */
 .voice-agent-stage-header {
-  padding: 0 0 12px 0;
-  background: transparent;  /* Box removed */
+  padding: 0 0 8px 0;
+  background: transparent;
   border-bottom: 1px solid var(--cobalt-hairline);
   display: flex;
   flex-direction: column;
@@ -276,7 +271,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .live-call-pill {
@@ -302,7 +297,7 @@ html, body {
   gap: 6px;
 }
 
-/* 3D Metallic Horizon AI Sphere Stage */
+/* 3D Voice Sphere */
 .stage-sphere-wrapper {
   display: flex;
   align-items: center;
@@ -311,12 +306,11 @@ html, body {
   margin: 4px 0;
 }
 
-/* Soft ambient blue underglow behind sphere */
 .stage-sphere-wrapper::before {
   content: '';
   position: absolute;
-  width: 220px;
-  height: 220px;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(21, 88, 201, 0.22) 0%, transparent 70%);
   filter: blur(28px);
@@ -326,8 +320,8 @@ html, body {
 
 .canvas-ai-orb-anchor {
   position: relative;
-  width: 190px;
-  height: 190px;
+  width: 175px;
+  height: 175px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -336,44 +330,93 @@ html, body {
   z-index: 5;
 }
 
+.canvas-ai-orb-anchor {
+  position: relative;
+  width: 250px;
+  height: 220px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: visible;
+}
+
 .canvas-ai-orb-anchor:hover {
-  transform: scale(1.03);
+  transform: scale(1.04);
 }
 
 .canvas-orb-element {
-  width: 190px;
-  height: 190px;
-  border-radius: 50%;
+  width: 250px;
+  height: 250px;
   display: block;
+  pointer-events: auto;
 }
 
 .orb-state-chip {
-  margin-top: 6px;
-  font-size: 0.66rem;
-  font-weight: 700;
+  margin-top: -4px;
+  font-size: 0.68rem;
+  font-weight: 800;
   letter-spacing: 0.08em;
-  color: #79B0FF;
+  color: #94A3B8;
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
 }
 
 .orb-state-chip .pulsing-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--cobalt-primary);
   box-shadow: 0 0 10px var(--cobalt-primary);
+  transition: all 0.3s ease;
 }
 
-/* Live Audio Frequency Spectrum Wave */
+.orb-state-chip .pulsing-dot.speaking {
+  background: #00F0FF;
+  box-shadow: 0 0 14px #00F0FF, 0 0 24px rgba(0, 240, 255, 0.6);
+  animation: pulse-strobe 0.8s infinite alternate ease-in-out;
+}
+
+.orb-state-chip .pulsing-dot.listening {
+  background: var(--lime-accent);
+  box-shadow: 0 0 14px var(--lime-accent), 0 0 24px rgba(212, 255, 36, 0.6);
+  animation: pulse-strobe 0.6s infinite alternate ease-in-out;
+}
+
+/* Fluid Waveform Visualizer (Gemini & OpenAI Audio Ribbon) */
+.fluid-waveform-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  width: 100%;
+  max-width: 440px;
+  margin: -6px auto 0 auto;
+  position: relative;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.fluid-waveform-canvas {
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(21, 88, 201, 0.4));
+  transition: filter 0.3s ease;
+}
+
 .voice-spectrum-visualizer {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  height: 32px;
-  margin: 4px 0 2px 0;
+  height: 28px;
+  margin: 3px 0 1px 0;
 }
 
 .spectrum-bar {
@@ -400,23 +443,23 @@ html, body {
   100% { transform: scaleY(1.3); }
 }
 
-/* Middle: Live Call Transcript Stream (BORDERLESS TELEMETRY FEED) */
+/* Chat Section DIRECTLY UNDER VOICE AGENT */
 .voice-call-stream-container {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: transparent; /* Box background deleted! */
-  margin-top: 6px;
+  background: transparent;
+  margin-top: 4px;
 }
 
 .transcript-section-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
-  background: transparent; /* Box removed */
+  padding: 6px 0;
+  background: transparent;
   border-bottom: 1px solid rgba(21, 88, 201, 0.15);
   flex-shrink: 0;
 }
@@ -436,45 +479,86 @@ html, body {
   font-weight: 600;
 }
 
-/* Chat Stream: Clean Telemetry Feed (No WhatsApp speech box cards) */
 .core-chat-stream {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 12px 4px;
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+/* Two-Way Conversational Dialogue Bubbles */
 .chat-message-bubble {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  animation: messageFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  padding-left: 14px;
+  gap: 5px;
+  max-width: 82%;
+  animation: messageFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes messageFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Thin vertical status markers instead of heavy card frames */
 .chat-message-bubble.agent {
-  border-left: 2px solid var(--lime-accent);
+  align-self: flex-start;
+  text-align: left;
+  animation-name: agentMessageSlide;
 }
 
 .chat-message-bubble.reporter {
-  border-left: 2px solid var(--cobalt-primary);
+  align-self: flex-end;
+  text-align: right;
+  animation-name: reporterMessageSlide;
+}
+
+@keyframes agentMessageSlide {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes reporterMessageSlide {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .bubble-sender-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
+}
+
+.chat-message-bubble.agent .bubble-sender-row {
+  justify-content: flex-start;
+}
+
+.chat-message-bubble.reporter .bubble-sender-row {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}
+
+.bubble-avatar-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.chat-message-bubble.agent .bubble-avatar-badge {
+  background: rgba(212, 255, 36, 0.15);
+  color: var(--lime-accent);
+  border: 1px solid rgba(212, 255, 36, 0.35);
+  box-shadow: 0 0 10px rgba(212, 255, 36, 0.2);
+}
+
+.chat-message-bubble.reporter .bubble-avatar-badge {
+  background: rgba(21, 88, 201, 0.25);
+  color: #79B0FF;
+  border: 1px solid rgba(121, 176, 255, 0.4);
+  box-shadow: 0 0 10px rgba(21, 88, 201, 0.25);
 }
 
 .bubble-author {
@@ -495,36 +579,103 @@ html, body {
   font-size: 0.58rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 1px 7px;
+  border-radius: 9999px;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
 }
 
-/* Borderless transparent text container */
+.chat-message-bubble.agent .bubble-role-tag {
+  background: rgba(212, 255, 36, 0.08);
+  color: var(--lime-accent);
+  border: 1px solid rgba(212, 255, 36, 0.2);
+}
+
+.chat-message-bubble.reporter .bubble-role-tag {
+  background: rgba(21, 88, 201, 0.15);
+  color: #79B0FF;
+  border: 1px solid rgba(21, 88, 201, 0.3);
+}
+
 .bubble-content-card {
-  padding: 2px 0;
-  background: transparent; /* Box removed! */
-  border: none;             /* Box border removed! */
-  box-shadow: none;         /* Box shadow removed! */
-  border-radius: 0;
+  padding: 11px 16px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-message-bubble.agent .bubble-content-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(212, 255, 36, 0.03) 100%);
+  border: 1px solid rgba(212, 255, 36, 0.22);
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.chat-message-bubble.reporter .bubble-content-card {
+  background: linear-gradient(135deg, rgba(21, 88, 201, 0.28) 0%, rgba(21, 88, 201, 0.14) 100%);
+  border: 1px solid rgba(121, 176, 255, 0.32);
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 4px 24px rgba(21, 88, 201, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-align: left;
 }
 
 .bubble-text {
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   line-height: 1.55;
-  color: #E2E8F0;
+  color: #F1F5F9;
   word-break: break-word;
 }
 
-/* Bottom: Hands-Free Voice Dock (Floating Toolbar) */
+/* Frontline Quick Reply Suggestion Stream */
+.quick-suggestions-stream {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scrollbar-width: none;
+}
+.quick-suggestions-stream::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-reply-pill {
+  white-space: nowrap;
+  background: rgba(21, 88, 201, 0.1);
+  border: 1px solid rgba(121, 176, 255, 0.22);
+  color: #A0C4FF;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.quick-reply-pill:hover {
+  background: rgba(21, 88, 201, 0.25);
+  border-color: rgba(121, 176, 255, 0.5);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(21, 88, 201, 0.3);
+}
+
+.quick-reply-pill:active {
+  transform: translateY(0);
+}
+
+/* Hands-Free Voice Dock */
 .voice-call-dock {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 0 2px 0;
-  background: transparent; /* Box removed! */
+  padding: 10px 0 2px 0;
+  background: transparent;
   border-top: 1px solid var(--cobalt-hairline);
   flex-shrink: 0;
 }
@@ -548,7 +699,6 @@ html, body {
   background: var(--cobalt-primary);
   color: #FFFFFF;
   box-shadow: 0 0 20px var(--cobalt-glow);
-  transform: scale(1.05);
 }
 
 .dock-mic-btn.recording {
@@ -559,9 +709,30 @@ html, body {
   animation: pulse-recording 1.2s infinite alternate ease-in-out;
 }
 
-@keyframes pulse-recording {
-  from { transform: scale(1); }
-  to { transform: scale(1.08); }
+.mic-mini-visualizer {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 12px;
+  margin-left: 2px;
+}
+
+.mini-bar {
+  width: 2.5px;
+  background: currentColor;
+  border-radius: 999px;
+  display: block;
+  animation: mini-bar-dance 0.6s infinite alternate ease-in-out;
+}
+
+.mini-bar.b1 { height: 6px; animation-delay: 0.05s; }
+.mini-bar.b2 { height: 11px; animation-delay: 0.18s; }
+.mini-bar.b3 { height: 8px; animation-delay: 0.12s; }
+.mini-bar.b4 { height: 5px; animation-delay: 0.25s; }
+
+@keyframes mini-bar-dance {
+  0% { transform: scaleY(0.4); }
+  100% { transform: scaleY(1.3); }
 }
 
 .dock-text-input {
@@ -581,10 +752,6 @@ html, body {
   border-color: var(--cobalt-primary);
   background: rgba(21, 88, 201, 0.12);
   box-shadow: 0 0 16px var(--cobalt-glow);
-}
-
-.dock-text-input::placeholder {
-  color: var(--text-dim);
 }
 
 .dock-send-btn {
@@ -611,339 +778,298 @@ html, body {
 }
 
 /* ==========================================================================
-   RIGHT COLUMN: Incident Dossier & Epistemic Breakdown
-   (ZERO BOX CONTAINER - Pure Floating Editorial Layout)
+   RIGHT COLUMN (~30%): Compact Live Summary & Quick Escalation Channels
    ========================================================================== */
-.ticket-dossier-column {
+.ticket-dossier-column,
+.fluid-summary-stream {
   display: flex;
   flex-direction: column;
+  gap: 16px;
   height: 100%;
   max-height: 100%;
   min-height: 0;
-  overflow: hidden;
-  background: transparent; /* Box removed! */
-  border: none;             /* Box border removed! */
-  border-radius: 0;
-  box-shadow: none;         /* Box shadow removed! */
-  padding: 0;
+  overflow-y: auto;
+  padding: 4px 6px 14px 6px;
+  background: transparent;
+  border: none;
   box-sizing: border-box;
 }
 
-/* Scenario Switcher Tabs */
-.ticket-header-strip {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--cobalt-hairline);
-  flex-shrink: 0;
-}
-
-.scenario-switcher-row {
-  display: flex;
-  gap: 8px;
-}
-
-.scenario-tab-btn {
-  flex: 1;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: transparent;
-  border: 1px solid var(--cobalt-hairline);
-  color: var(--text-muted);
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.scenario-tab-btn:hover {
-  border-color: var(--cobalt-primary);
-  color: var(--text-pure);
-  background: var(--cobalt-soft);
-}
-
-.scenario-tab-btn.active {
-  background: var(--cobalt-soft);
-  border-color: var(--cobalt-primary);
-  color: #FFFFFF;
-  box-shadow: 0 0 16px var(--cobalt-glow);
-}
-
-/* Ticket Headline & P1 Pill */
-.ticket-id-tag {
+.ticket-header-strip,
+.stream-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-bottom: 2px;
+  flex-shrink: 0;
 }
 
-.ticket-number {
-  font-size: 0.88rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: #79B0FF;
+.ticket-id-tag,
+.stream-ticket-ref {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #79B0FF;
 }
 
-.ticket-status-pill.p1-urgent {
+.ambient-ping-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lime-accent);
+  box-shadow: 0 0 10px var(--lime-accent);
+  animation: pulse-strobe 1.5s infinite alternate;
+}
+
+.ticket-status-pill.p1-urgent,
+.fluid-urgent-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 3px 12px;
   border-radius: 999px;
-  background: var(--lime-soft);
-  border: 1px solid var(--lime-accent);
+  background: rgba(212, 255, 36, 0.08);
+  border: 1px solid rgba(212, 255, 36, 0.3);
   color: var(--lime-accent);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  box-shadow: 0 0 14px rgba(212, 255, 36, 0.25);
+  box-shadow: 0 0 14px rgba(212, 255, 36, 0.2);
 }
 
-.dossier-incident-card {
-  margin-bottom: 12px;
-  flex-shrink: 0;
+.urgent-pulse-glow {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lime-accent);
+  box-shadow: 0 0 6px var(--lime-accent);
 }
 
-.incident-headline {
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #FFFFFF;
-  line-height: 1.25;
-}
-
-.incident-subline {
-  font-size: 0.76rem;
-  color: var(--text-muted);
-  margin-top: 3px;
-}
-
-/* Metrics Row: 96% Detail Score, Urgency, Target Dept */
-.dossier-metric-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--cobalt-hairline);
-  flex-shrink: 0;
-}
-
-.metric-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.metric-label {
-  font-size: 0.6rem;
-  font-weight: 800;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.metric-val {
+.incident-headline,
+.stream-incident-title {
   font-size: 1.05rem;
   font-weight: 800;
   color: #FFFFFF;
-  font-family: var(--font-display);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 
-.metric-val.text-ruby {
-  color: var(--lime-accent);
-}
-
-.metric-sub {
-  font-size: 0.62rem;
-  color: var(--text-muted);
-}
-
-.progress-bar-track {
-  width: 100%;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--cobalt-primary), var(--lime-accent));
-  border-radius: 999px;
-  transition: width 0.3s ease;
-}
-
-/* Epistemic Claims Stream (Facts, Unknowns, Hypotheses) */
-.epistemic-stream-deck {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-right: 4px;
-  margin-bottom: 12px;
-}
-
-.triad-group {
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(21, 88, 201, 0.1);
-}
-
-.triad-group-header {
+.card-mini-label,
+.fluid-section-label {
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #79B0FF;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  gap: 6px;
   margin-bottom: 6px;
   text-transform: uppercase;
 }
 
-.facts-group .triad-group-header { color: #55FFC2; }
-.unknowns-group .triad-group-header { color: var(--lime-accent); }
-.hypotheses-group .triad-group-header { color: #79B0FF; }
-
-.triad-sub {
-  font-size: 0.6rem;
-  font-weight: 600;
-  color: var(--text-dim);
+.label-gem {
+  color: var(--lime-accent);
+  font-size: 0.72rem;
 }
 
-/* Borderless claim items */
-.claim-item-row {
+/* 1. Live Plain-Language Summary (Fluid Prose, Zero Box) */
+.summary-card,
+.fluid-summary-block {
+  background: transparent;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.summary-text,
+.fluid-summary-prose {
+  font-size: 0.85rem;
+  line-height: 1.62;
+  color: #CBD5E1;
+  border-left: 2px solid rgba(21, 88, 201, 0.5);
+  padding-left: 12px;
+  margin-top: 4px;
+}
+
+/* 2. Key Situation Facts (Floating Glow Bullet Stack, Zero Box) */
+.key-details-card,
+.fluid-facts-block {
+  background: transparent;
+  border: none;
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.key-details-list,
+.fluid-facts-stack {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 0;
+}
+
+.detail-item,
+.fluid-fact-item {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 4px 0;
-  margin-bottom: 2px;
-  font-size: 0.76rem;
-  line-height: 1.45;
-  background: transparent; /* Box removed! */
-  border: none;             /* Box border removed! */
-}
-
-.claim-item-row .bullet {
-  font-size: 0.72rem;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.claim-item-row.fact .bullet { color: #55FFC2; }
-.claim-item-row.unknown .bullet { color: var(--lime-accent); }
-.claim-item-row.hypothesis .bullet { color: #79B0FF; }
-
-.claim-text {
-  flex: 1;
+  gap: 10px;
+  font-size: 0.78rem;
+  line-height: 1.48;
   color: #E2E8F0;
 }
 
-.confidence-chip {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: var(--cobalt-soft);
-  color: #79B0FF;
+.check-icon,
+.fact-glow-bullet {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--lime-accent);
+  box-shadow: 0 0 8px var(--lime-accent);
+  margin-top: 6px;
   flex-shrink: 0;
 }
 
-.confidence-chip.unknown {
-  background: var(--lime-soft);
-  color: var(--lime-accent);
+.detail-text,
+.fact-prose {
+  flex: 1;
 }
 
-.confidence-chip.hypothesis {
-  background: rgba(21, 88, 201, 0.2);
-  color: #A5C8FF;
-}
-
-/* Matched SOP & Impact */
-.dossier-sop-card {
-  padding: 8px 0;
-  background: transparent; /* Box removed! */
-  border-top: 1px solid var(--cobalt-hairline);
-  margin-bottom: 10px;
+/* 3. Recommended Resolution Team (Borderless Ambient Glow Callout) */
+.assigned-team-card,
+.fluid-team-callout {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 4px 0;
   flex-shrink: 0;
 }
 
-.sop-title-row {
+.fluid-team-title-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 3px;
+  margin-top: 2px;
 }
 
-.sop-badge {
-  font-size: 0.6rem;
+.team-glow-icon {
+  font-size: 1.05rem;
+}
+
+.team-name,
+.fluid-team-name {
+  font-size: 1.02rem;
   font-weight: 800;
-  background: var(--cobalt-primary);
   color: #FFFFFF;
-  padding: 1px 7px;
-  border-radius: 4px;
-  letter-spacing: 0.04em;
+  text-shadow: 0 0 14px rgba(21, 88, 201, 0.75);
 }
 
-.sop-name {
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: #FFFFFF;
+.team-routing-note,
+.fluid-team-caption {
+  font-size: 0.66rem;
+  color: #79B0FF;
+  margin-top: 3px;
+  padding-left: 28px;
 }
 
-.sop-impact {
-  font-size: 0.7rem;
-  color: var(--lime-accent);
-}
-
-/* Primary Escalation CTA: 10% Lime Accent Glow */
-.dossier-dispatch-dock {
+/* 4. Quick Escalation Channels (Floating Organic Pills) */
+.escalation-actions-section,
+.fluid-escalation-dock {
   flex-shrink: 0;
+  padding-top: 6px;
 }
 
-.dispatch-ticket-btn {
+.escalation-buttons-group,
+.floating-pills-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 6px;
+}
+
+.escalate-btn,
+.floating-dispatch-pill {
   width: 100%;
-  padding: 12px 18px;
-  border-radius: 999px;
-  border: 1px solid var(--lime-accent);
-  background: var(--cobalt-primary);
-  color: #FFFFFF;
+  padding: 10px 16px;
+  border-radius: 9999px;
   font-family: var(--font-display);
-  font-size: 0.84rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
+  font-size: 0.78rem;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 0 24px var(--cobalt-glow), 0 0 10px rgba(212, 255, 36, 0.2);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
-.dispatch-ticket-btn:hover {
+/* Slack Capsule */
+.escalate-btn.slack-btn,
+.floating-dispatch-pill.slack-pill {
+  background: #1558C9;
+  border: 1px solid rgba(121, 176, 255, 0.5);
+  color: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(21, 88, 201, 0.4);
+}
+
+.escalate-btn.slack-btn:hover:not(:disabled),
+.floating-dispatch-pill.slack-pill:hover:not(:disabled) {
   background: #1c68e8;
-  border-color: #FFFFFF;
-  box-shadow: 0 0 32px var(--cobalt-glow), 0 0 20px var(--lime-glow);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 26px rgba(21, 88, 201, 0.65);
 }
 
-.dispatch-ticket-btn.dispatched {
-  background: rgba(39, 201, 63, 0.15);
-  border-color: #27C93F;
-  color: #A3FFB8;
-  box-shadow: 0 0 16px rgba(39, 201, 63, 0.3);
+/* Email Capsule */
+.escalate-btn.email-btn,
+.floating-dispatch-pill.email-pill {
+  background: rgba(21, 88, 201, 0.1);
+  border: 1px solid rgba(121, 176, 255, 0.25);
+  backdrop-filter: blur(14px);
+  color: #E2E8F0;
+}
+
+.escalate-btn.email-btn:hover:not(:disabled),
+.floating-dispatch-pill.email-pill:hover:not(:disabled) {
+  background: rgba(21, 88, 201, 0.22);
+  border-color: rgba(121, 176, 255, 0.5);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 18px rgba(21, 88, 201, 0.3);
+}
+
+/* SMS Capsule */
+.escalate-btn.sms-btn,
+.floating-dispatch-pill.sms-pill {
+  background: rgba(212, 255, 36, 0.08);
+  border: 1px solid rgba(212, 255, 36, 0.35);
+  color: var(--lime-accent);
+}
+
+.escalate-btn.sms-btn:hover:not(:disabled),
+.floating-dispatch-pill.sms-pill:hover:not(:disabled) {
+  background: rgba(212, 255, 36, 0.16);
+  border-color: var(--lime-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(212, 255, 36, 0.3);
+}
+
+.escalate-btn.dispatched,
+.floating-dispatch-pill.dispatched {
+  background: rgba(39, 201, 63, 0.15) !important;
+  border-color: #27C93F !important;
+  color: #A3FFB8 !important;
+  box-shadow: none !important;
   cursor: default;
 }
 
-/* Toast Notification */
+/* Toast */
 .hume-toast {
   position: fixed;
   bottom: 24px;
@@ -965,3 +1091,121 @@ html, body {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==========================================================================
+   Inspira UI & Animate UI Elevated Component Styles
+   ========================================================================== */
+
+/* 1. BorderBeam Effect (Inspira UI / Magic UI) */
+.border-beam-container {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+  border: var(--border-width, 1.5px) solid transparent;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: 2;
+}
+
+.border-beam-tracer {
+  position: absolute;
+  inset: -60%;
+  width: 220%;
+  height: 220%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    var(--color-from, #D4FF24) 35deg,
+    var(--color-to, #1558C9) 75deg,
+    transparent 110deg
+  );
+  animation: borderBeamRotate var(--duration, 8s) linear infinite;
+}
+
+@keyframes borderBeamRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 2. Spotlight & 3D Tilt Card (Inspira UI / Skiper UI) */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.spotlight-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+.assigned-team-card-wrapper {
+  position: relative;
+  border-radius: 12px;
+}
+
+.assigned-team-card-wrapper .assigned-team-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 3. Shimmering Text Sweep (Inspira UI / Animate UI) */
+.shimmer-text-element {
+  display: inline-block;
+  background: linear-gradient(
+    110deg,
+    var(--base-color, #FFFFFF) 25%,
+    var(--shimmer-color, #D4FF24) 50%,
+    var(--base-color, #FFFFFF) 75%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmerTextSweep var(--duration, 4s) linear infinite;
+}
+
+@keyframes shimmerTextSweep {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* 4. Liquid Ripple Button (Animate UI) */
+.ripple-cta-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  animation: rippleExpand 0.65s cubic-bezier(0, 0, 0.2, 1) forwards;
+  pointer-events: none;
+  width: 140px;
+  height: 140px;
+  z-index: 1;
+}
+
+@keyframes rippleExpand {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+}
+
+.ripple-btn-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+

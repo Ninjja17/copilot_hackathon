@@ -73,19 +73,32 @@ export const api = {
     }
   },
 
-  // Dispatch incident ticket to pager / incident response & log audit record
-  async dispatchTicket(ticket) {
+  // Dispatch incident ticket via specialized channel ('slack' | 'email' | 'sms')
+  async dispatchTicket(ticket, channel = 'slack') {
     try {
-      const res = await fetch('/api/dispatch', {
+      const endpoint = `/api/dispatch/${channel}`;
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticket })
+        body: JSON.stringify({ ticket, channel })
       });
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       return await res.json();
     } catch (err) {
       console.warn('API dispatchTicket fallback:', err.message);
-      return { success: true, fallback: true, message: 'Ticket queued locally.' };
+      return { success: true, channel, fallback: true, message: `Ticket escalated via ${channel} (local simulated).` };
+    }
+  },
+
+  // Fetch full dispatch audit trail from SQLite
+  async getAuditTrail(ticketId) {
+    try {
+      const res = await fetch(`/api/dispatch/audit/${ticketId}`);
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      return { success: false, auditTrail: [] };
     }
   }
 };
+

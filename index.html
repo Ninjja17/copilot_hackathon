@@ -225,13 +225,15 @@
     }
 
     // ========================================================
-    // Canvas UI: 3D Metallic Horizon AI Sphere (Precision Specular + Liquid Equator)
-    // Style matches user reference: Satin pearl dome, equatorial horizon band,
-    // obsidian shadow bowl, razor-sharp 1.2px Fresnel rim light.
+    // Fluid Waveform Visualizer (Dribbble-Grade Audio Ribbon)
+    // 60fps 3-layer harmonic sine wave with Gaussian envelope
     // ========================================================
-    function CanvasFluidOrb({ isSpeaking, isRecording, onClick }) {
+    // ========================================================
+    // Fluid Waveform Visualizer (Gemini & OpenAI Audio Ribbon)
+    // 60fps 4-layer chromatic fluid ribbon with photon sparkles
+    // ========================================================
+    function FluidWaveformVisualizer({ isSpeaking, isRecording }) {
       const canvasRef = useRef(null);
-      const shockwavesRef = useRef([]);
 
       useEffect(() => {
         const canvas = canvasRef.current;
@@ -240,190 +242,448 @@
         if (!ctx) return;
 
         let animId;
-        let step = 0;
+        let phase = 0;
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const size = 190;
+        const width = 420;
+        const height = 52;
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+
+        const render = () => {
+          const speed = isSpeaking ? 0.058 : isRecording ? 0.072 : 0.022;
+          phase += speed;
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.save();
+          ctx.scale(dpr, dpr);
+
+          const cy = height / 2;
+          const targetAmp = isSpeaking ? 18 : isRecording ? 15 : 4.5;
+
+          const waves = [
+            {
+              color: "rgba(21, 88, 201, 0.55)",
+              glow: "rgba(21, 88, 201, 0.75)",
+              lineWidth: 2.2,
+              freq: 0.022,
+              phaseOffset: phase * 0.85,
+              ampMult: 0.82
+            },
+            {
+              color: "rgba(0, 240, 255, 0.75)",
+              glow: "rgba(0, 240, 255, 0.85)",
+              lineWidth: 1.8,
+              freq: 0.034,
+              phaseOffset: phase * 1.25 + Math.PI / 3.5,
+              ampMult: 0.76
+            },
+            {
+              color: isRecording ? "#D4FF24" : "rgba(121, 176, 255, 0.9)",
+              glow: isRecording ? "rgba(212, 255, 36, 0.95)" : "rgba(121, 176, 255, 0.9)",
+              lineWidth: 2.4,
+              freq: 0.042,
+              phaseOffset: phase * 1.6 + Math.PI / 1.6,
+              ampMult: 1.0
+            },
+            {
+              color: "rgba(255, 255, 255, 0.85)",
+              glow: "rgba(255, 255, 255, 0.9)",
+              lineWidth: 1.2,
+              freq: 0.05,
+              phaseOffset: phase * 1.9 + Math.PI,
+              ampMult: 0.65
+            }
+          ];
+
+          waves.forEach((w) => {
+            ctx.beginPath();
+            ctx.strokeStyle = w.color;
+            ctx.lineWidth = w.lineWidth;
+            ctx.shadowColor = w.glow;
+            ctx.shadowBlur = isSpeaking || isRecording ? 14 : 6;
+
+            for (let x = 0; x <= width; x += 3) {
+              const norm = (x - width / 2) / (width * 0.44);
+              const envelope = Math.exp(-norm * norm);
+              const y =
+                cy +
+                Math.sin(x * w.freq + w.phaseOffset) * targetAmp * w.ampMult * envelope +
+                Math.sin(x * w.freq * 2.2 + w.phaseOffset * 1.4) * (targetAmp * 0.38) * envelope +
+                Math.cos(x * w.freq * 3.1 - w.phaseOffset * 0.8) * (targetAmp * 0.18) * envelope;
+
+              if (x === 0) {
+                ctx.moveTo(x, y);
+              } else {
+                ctx.lineTo(x, y);
+              }
+            }
+            ctx.stroke();
+          });
+
+          if (isSpeaking || isRecording) {
+            const sparkleCount = 5;
+            for (let s = 0; s < sparkleCount; s++) {
+              const sx = ((phase * 45 + s * (width / sparkleCount)) % width);
+              const norm = (sx - width / 2) / (width * 0.44);
+              const env = Math.exp(-norm * norm);
+              const sy = cy + Math.sin(sx * 0.04 + phase * 1.6) * targetAmp * env;
+
+              ctx.beginPath();
+              ctx.arc(sx, sy, 1.8, 0, Math.PI * 2);
+              ctx.fillStyle = isRecording ? "#D4FF24" : "#00F0FF";
+              ctx.shadowColor = "#FFFFFF";
+              ctx.shadowBlur = 8;
+              ctx.fill();
+            }
+          }
+
+          ctx.restore();
+          animId = requestAnimationFrame(render);
+        };
+
+        animId = requestAnimationFrame(render);
+        return () => cancelAnimationFrame(animId);
+      }, [isSpeaking, isRecording]);
+
+      return (
+        <div className="fluid-waveform-wrapper">
+          <canvas ref={canvasRef} className="fluid-waveform-canvas" />
+        </div>
+      );
+    }
+
+    // ========================================================
+    // Canvas UI: Gemini & OpenAI Living Voice Organism
+    // Living organic fluid blob, Gemini 4-point star core,
+    // and acoustic resonance shockwaves on speech & interaction.
+    // ========================================================
+    function CanvasFluidOrb({ isSpeaking, isRecording, onClick }) {
+      const canvasRef = useRef(null);
+      const shockwavesRef = useRef([]);
+      const energyRef = useRef(0.2);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        let animId;
+        let time = 0;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const size = 250;
         canvas.width = size * dpr;
         canvas.height = size * dpr;
         canvas.style.width = `${size}px`;
         canvas.style.height = `${size}px`;
 
         const cx = size / 2;
-        const cy = size / 2;
-        const radius = size * 0.44; // ~83.6px sphere radius
+        const baseCy = size / 2;
+        const baseRadius = 66;
+
+        const particles = Array.from({ length: 20 }, (_, i) => ({
+          angle: (i / 20) * Math.PI * 2,
+          speed: 0.014 + (i % 5) * 0.005,
+          distOffset: ((i % 4) - 1.5) * 16,
+          size: 1.2 + (i % 4) * 0.7,
+          tilt: 0.38 + (i % 3) * 0.15,
+          hue: i % 2 === 0 ? "cyan" : "lime"
+        }));
 
         const render = () => {
-          step += isSpeaking ? 0.045 : isRecording ? 0.06 : 0.02;
+          const targetEnergy = isSpeaking ? 1.0 : isRecording ? 0.75 : 0.22;
+          energyRef.current += (targetEnergy - energyRef.current) * 0.08;
+          const energy = energyRef.current;
+
+          const speed = 0.02 + energy * 0.038;
+          time += speed;
+
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.save();
           ctx.scale(dpr, dpr);
 
-          // 1. Canvas UI Force Field Shockwaves on Interaction / Speech
+          const floatY = Math.sin(time * 1.5) * (3 + energy * 3);
+          const cy = baseCy + floatY;
+
+          // 1. Outer Volumetric Aurora Bloom
+          const bloomRadius = baseRadius * (1.4 + energy * 0.5 + Math.sin(time * 2) * 0.05);
+          const bloomGrad = ctx.createRadialGradient(cx, cy, baseRadius * 0.4, cx, cy, bloomRadius);
+          if (isSpeaking) {
+            bloomGrad.addColorStop(0, "rgba(21, 88, 201, 0.45)");
+            bloomGrad.addColorStop(0.45, "rgba(0, 240, 255, 0.18)");
+            bloomGrad.addColorStop(0.75, "rgba(212, 255, 36, 0.08)");
+            bloomGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+          } else if (isRecording) {
+            bloomGrad.addColorStop(0, "rgba(0, 240, 255, 0.38)");
+            bloomGrad.addColorStop(0.5, "rgba(212, 255, 36, 0.22)");
+            bloomGrad.addColorStop(0.8, "rgba(21, 88, 201, 0.08)");
+            bloomGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+          } else {
+            bloomGrad.addColorStop(0, "rgba(21, 88, 201, 0.28)");
+            bloomGrad.addColorStop(0.5, "rgba(56, 189, 248, 0.1)");
+            bloomGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+          }
+          ctx.beginPath();
+          ctx.arc(cx, cy, bloomRadius, 0, Math.PI * 2);
+          ctx.fillStyle = bloomGrad;
+          ctx.fill();
+
+          // 2. OpenAI-Style Acoustic Resonance Shockwaves
+          const ringCount = 3;
+          for (let i = 0; i < ringCount; i++) {
+            const ringPhase = (time * 1.6 + i * (Math.PI * 2 / ringCount)) % (Math.PI * 2);
+            const progress = ringPhase / (Math.PI * 2);
+            const ringR = baseRadius + progress * (42 + energy * 28);
+            const ringAlpha = Math.sin(progress * Math.PI) * (0.15 + energy * 0.45);
+
+            ctx.save();
+            ctx.beginPath();
+            const numRingPoints = 48;
+            for (let j = 0; j <= numRingPoints; j++) {
+              const theta = (j / numRingPoints) * Math.PI * 2;
+              const undulation = Math.sin(theta * 3 + time * 3) * (1.5 + energy * 3);
+              const r = ringR + undulation;
+              const rx = cx + Math.cos(theta) * r;
+              const ry = cy + Math.sin(theta) * r;
+              if (j === 0) ctx.moveTo(rx, ry);
+              else ctx.lineTo(rx, ry);
+            }
+            ctx.closePath();
+            ctx.strokeStyle = isRecording
+              ? `rgba(212, 255, 36, ${ringAlpha})`
+              : `rgba(56, 189, 248, ${ringAlpha})`;
+            ctx.lineWidth = 1.2 + energy * 0.8;
+            ctx.shadowColor = isRecording ? "rgba(212, 255, 36, 0.8)" : "rgba(56, 189, 248, 0.8)";
+            ctx.shadowBlur = 10;
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // Click shockwaves
           for (let i = shockwavesRef.current.length - 1; i >= 0; i--) {
             const sw = shockwavesRef.current[i];
-            sw.r += 2.8;
-            sw.alpha *= 0.93;
+            sw.r += 3.8;
+            sw.alpha *= 0.92;
             if (sw.alpha < 0.02) {
               shockwavesRef.current.splice(i, 1);
               continue;
             }
+            ctx.save();
             ctx.beginPath();
             ctx.arc(cx, cy, sw.r, 0, Math.PI * 2);
-            ctx.strokeStyle = sw.color === "ruby"
-              ? `rgba(212, 255, 36, ${sw.alpha})`
-              : `rgba(21, 88, 201, ${sw.alpha})`;
-            ctx.lineWidth = 1.6;
+            ctx.strokeStyle = `rgba(212, 255, 36, ${sw.alpha})`;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = "rgba(212, 255, 36, 0.9)";
+            ctx.shadowBlur = 14;
             ctx.stroke();
+            ctx.restore();
           }
 
-          // 2. Outer Atmospheric Ambient Aura
-          const auraGrad = ctx.createRadialGradient(cx, cy, radius * 0.9, cx, cy, radius * 1.15);
-          if (isRecording) {
-            auraGrad.addColorStop(0, "rgba(212, 255, 36, 0.2)");
-            auraGrad.addColorStop(0.5, "rgba(212, 255, 36, 0.05)");
-            auraGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
-          } else {
-            auraGrad.addColorStop(0, "rgba(21, 88, 201, 0.25)");
-            auraGrad.addColorStop(0.5, "rgba(21, 88, 201, 0.07)");
-            auraGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+          // 3. Orbital Particles (Behind)
+          particles.forEach((p) => {
+            p.angle += p.speed * (1 + energy * 1.2);
+            const sinA = Math.sin(p.angle);
+            if (sinA < 0) {
+              const cosA = Math.cos(p.angle);
+              const orbitR = baseRadius + 18 + p.distOffset;
+              const px = cx + cosA * orbitR;
+              const py = cy + sinA * (orbitR * p.tilt);
+              const alpha = 0.2 + (-sinA) * 0.4;
+              ctx.beginPath();
+              ctx.arc(px, py, p.size * 0.85, 0, Math.PI * 2);
+              ctx.fillStyle = p.hue === "cyan"
+                ? `rgba(56, 189, 248, ${alpha})`
+                : `rgba(212, 255, 36, ${alpha})`;
+              ctx.fill();
+            }
+          });
+
+          // 4. Primary Living Fluid Morphing Body (OpenAI + Gemini)
+          const numPoints = 84;
+          const fluidPoints = [];
+
+          for (let i = 0; i < numPoints; i++) {
+            const theta = (i / numPoints) * Math.PI * 2;
+            const h2 = Math.sin(theta * 2 + time * 1.8) * (5 + energy * 11);
+            const h3 = Math.cos(theta * 3 - time * 2.2) * (4 + energy * 9);
+            const h4 = Math.sin(theta * 4 + time * 1.1) * (6 + energy * 13);
+            const h5 = Math.cos(theta * 5 + time * 3.4) * (2 + energy * 5.5);
+            const h7 = Math.sin(theta * 7 - time * 4.2) * (1.5 + energy * 3.5);
+
+            const r = baseRadius + h2 + h3 + h4 + h5 + h7;
+            const x = cx + Math.cos(theta) * r;
+            const y = cy + Math.sin(theta) * r;
+            fluidPoints.push({ x, y });
           }
+
           ctx.beginPath();
-          ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
-          ctx.fillStyle = auraGrad;
+          const firstMidX = (fluidPoints[0].x + fluidPoints[numPoints - 1].x) / 2;
+          const firstMidY = (fluidPoints[0].y + fluidPoints[numPoints - 1].y) / 2;
+          ctx.moveTo(firstMidX, firstMidY);
+
+          for (let i = 0; i < numPoints; i++) {
+            const p0 = fluidPoints[i];
+            const p1 = fluidPoints[(i + 1) % numPoints];
+            const midX = (p0.x + p1.x) / 2;
+            const midY = (p0.y + p1.y) / 2;
+            ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+          }
+          ctx.closePath();
+
+          const gradAngle = time * 0.8;
+          const gx1 = cx + Math.cos(gradAngle) * baseRadius;
+          const gy1 = cy + Math.sin(gradAngle) * baseRadius;
+          const gx2 = cx - Math.cos(gradAngle) * baseRadius;
+          const gy2 = cy - Math.sin(gradAngle) * baseRadius;
+
+          const bodyGrad = ctx.createLinearGradient(gx1, gy1, gx2, gy2);
+          if (isSpeaking) {
+            bodyGrad.addColorStop(0, "#00F0FF");
+            bodyGrad.addColorStop(0.3, "#1558C9");
+            bodyGrad.addColorStop(0.65, "#0B1D3D");
+            bodyGrad.addColorStop(0.85, "#2563EB");
+            bodyGrad.addColorStop(1, "#D4FF24");
+          } else if (isRecording) {
+            bodyGrad.addColorStop(0, "#D4FF24");
+            bodyGrad.addColorStop(0.32, "#00F0FF");
+            bodyGrad.addColorStop(0.68, "#0B234A");
+            bodyGrad.addColorStop(0.9, "#1558C9");
+            bodyGrad.addColorStop(1, "#38BDF8");
+          } else {
+            bodyGrad.addColorStop(0, "#38BDF8");
+            bodyGrad.addColorStop(0.35, "#1558C9");
+            bodyGrad.addColorStop(0.7, "#071224");
+            bodyGrad.addColorStop(1, "#1E40AF");
+          }
+
+          ctx.fillStyle = bodyGrad;
           ctx.fill();
 
-          // 3. Clip strictly to Sphere Geometry
+          ctx.strokeStyle = isSpeaking
+            ? "rgba(0, 240, 255, 0.75)"
+            : isRecording
+            ? "rgba(212, 255, 36, 0.85)"
+            : "rgba(56, 189, 248, 0.55)";
+          ctx.lineWidth = 1.5 + energy * 0.8;
+          ctx.stroke();
+
+          // 5. Internal Caustics & Optical Refraction
           ctx.save();
-          ctx.beginPath();
-          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
           ctx.clip();
 
-          // A. Base obsidian shadow sphere
-          ctx.fillStyle = "#030407";
-          ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
-
-          // B. Deep Lower Hemisphere Shadow Bowl
-          const bottomShadow = ctx.createRadialGradient(
-            cx, cy + radius * 0.35, radius * 0.1,
-            cx, cy + radius * 0.25, radius * 0.95
+          ctx.globalCompositeOperation = "screen";
+          const innerRadius = baseRadius * (0.68 + energy * 0.12);
+          const innerGrad = ctx.createRadialGradient(
+            cx - innerRadius * 0.25,
+            cy - innerRadius * 0.28,
+            innerRadius * 0.1,
+            cx,
+            cy,
+            innerRadius
           );
-          bottomShadow.addColorStop(0, "#010204");
-          bottomShadow.addColorStop(0.55, "#060A14");
-          bottomShadow.addColorStop(1, "#0D182E");
-          ctx.fillStyle = bottomShadow;
-          ctx.fillRect(cx - radius, cy, radius * 2, radius);
-
-          // C. Dynamic Equatorial Horizon Band
-          const bandWobble = isSpeaking
-            ? Math.sin(step * 3) * 1.6
-            : isRecording
-            ? Math.sin(step * 5) * 2.2
-            : Math.sin(step) * 0.6;
-          const bandY = cy + bandWobble;
-
-          const bandGrad = ctx.createLinearGradient(0, bandY - 18, 0, bandY + 32);
-          if (isRecording) {
-            bandGrad.addColorStop(0, "rgba(212, 255, 36, 0)");
-            bandGrad.addColorStop(0.28, "rgba(212, 255, 36, 0.85)");
-            bandGrad.addColorStop(0.55, "rgba(180, 225, 20, 0.95)");
-            bandGrad.addColorStop(0.8, "rgba(120, 160, 10, 0.45)");
-            bandGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+          if (isSpeaking) {
+            innerGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+            innerGrad.addColorStop(0.28, "rgba(0, 240, 255, 0.85)");
+            innerGrad.addColorStop(0.65, "rgba(21, 88, 201, 0.55)");
+            innerGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+          } else if (isRecording) {
+            innerGrad.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+            innerGrad.addColorStop(0.3, "rgba(212, 255, 36, 0.85)");
+            innerGrad.addColorStop(0.7, "rgba(0, 240, 255, 0.45)");
+            innerGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
           } else {
-            bandGrad.addColorStop(0, "rgba(21, 88, 201, 0)");
-            bandGrad.addColorStop(0.28, "rgba(45, 130, 255, 0.85)");
-            bandGrad.addColorStop(0.55, "rgba(21, 88, 201, 0.98)");
-            bandGrad.addColorStop(0.8, "rgba(10, 45, 120, 0.55)");
-            bandGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+            innerGrad.addColorStop(0, "rgba(255, 255, 255, 0.8)");
+            innerGrad.addColorStop(0.35, "rgba(56, 189, 248, 0.65)");
+            innerGrad.addColorStop(0.75, "rgba(21, 88, 201, 0.35)");
+            innerGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
           }
 
-          ctx.fillStyle = bandGrad;
           ctx.beginPath();
-          ctx.moveTo(cx - radius, bandY);
-          for (let x = cx - radius; x <= cx + radius; x += 3) {
-            const normX = (x - cx) / radius;
-            const curve = Math.sqrt(Math.max(0, 1 - normX * normX)) * 2.2;
-            const fluid = (isSpeaking || isRecording) ? Math.sin(normX * 5 + step * 4) * 2.0 : 0;
-            ctx.lineTo(x, bandY - 16 + fluid + curve);
-          }
-          for (let x = cx + radius; x >= cx - radius; x -= 3) {
-            const normX = (x - cx) / radius;
-            const curve = Math.sqrt(Math.max(0, 1 - normX * normX)) * 4.2;
-            const fluid = (isSpeaking || isRecording) ? Math.sin(normX * 5 + step * 4 + 1.2) * 2.0 : 0;
-            ctx.lineTo(x, bandY + 32 + fluid + curve);
-          }
-          ctx.closePath();
+          ctx.arc(cx - innerRadius * 0.1, cy - innerRadius * 0.1, innerRadius, 0, Math.PI * 2);
+          ctx.fillStyle = innerGrad;
           ctx.fill();
 
-          // D. Upper Pearl / Satin Chrome Dome
-          const domeGrad = ctx.createRadialGradient(
-            cx,
-            cy - radius * 0.28,
-            radius * 0.08,
-            cx,
-            cy - radius * 0.08,
-            radius * 0.94
-          );
-          domeGrad.addColorStop(0, "#FFFFFF");
-          domeGrad.addColorStop(0.3, "#F4F7FC");
-          domeGrad.addColorStop(0.62, "#D9E3F0");
-          domeGrad.addColorStop(0.88, "#9EB4CE");
-          domeGrad.addColorStop(1, isRecording ? "#829462" : "#637D9E");
-
+          // 6. Gemini 4-Point Celestial Star Core
           ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(-time * 0.65);
+
+          const starPoints = 4;
+          const outerR = baseRadius * (0.55 + energy * 0.28 + Math.sin(time * 3) * 0.05);
+          const innerR = outerR * 0.28;
+
           ctx.beginPath();
-          ctx.moveTo(cx - radius, bandY);
-          ctx.arc(cx, cy, radius, Math.PI, 0, false);
-          for (let x = cx + radius; x >= cx - radius; x -= 3) {
-            const normX = (x - cx) / radius;
-            const fluid = (isSpeaking || isRecording) ? Math.sin(normX * 5 + step * 4) * 1.6 : 0;
-            ctx.lineTo(x, bandY + fluid);
+          for (let s = 0; s < starPoints * 2; s++) {
+            const a = (s / (starPoints * 2)) * Math.PI * 2;
+            const rad = s % 2 === 0 ? outerR : innerR;
+            const sx = Math.cos(a) * rad;
+            const sy = Math.sin(a) * rad;
+            if (s === 0) ctx.moveTo(sx, sy);
+            else ctx.lineTo(sx, sy);
           }
           ctx.closePath();
-          ctx.fillStyle = domeGrad;
+
+          const starGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, outerR);
+          starGrad.addColorStop(0, "#FFFFFF");
+          starGrad.addColorStop(0.25, isRecording ? "#D4FF24" : "#00F0FF");
+          starGrad.addColorStop(0.65, isRecording ? "rgba(0, 240, 255, 0.7)" : "rgba(21, 88, 201, 0.7)");
+          starGrad.addColorStop(1, "rgba(3, 4, 7, 0)");
+
+          ctx.fillStyle = starGrad;
+          ctx.shadowColor = isRecording ? "rgba(212, 255, 36, 0.9)" : "rgba(0, 240, 255, 0.9)";
+          ctx.shadowBlur = 16;
           ctx.fill();
           ctx.restore();
 
-          // E. Soft Horizon Atmospheric Bleed
-          const bleedGrad = ctx.createLinearGradient(0, bandY - 14, 0, bandY + 12);
-          if (isRecording) {
-            bleedGrad.addColorStop(0, "rgba(212, 255, 36, 0)");
-            bleedGrad.addColorStop(0.5, "rgba(212, 255, 36, 0.45)");
-            bleedGrad.addColorStop(1, "rgba(180, 220, 20, 0.88)");
-          } else {
-            bleedGrad.addColorStop(0, "rgba(21, 88, 201, 0)");
-            bleedGrad.addColorStop(0.5, "rgba(21, 88, 201, 0.45)");
-            bleedGrad.addColorStop(1, "rgba(21, 88, 201, 0.92)");
-          }
-          ctx.fillStyle = bleedGrad;
-          ctx.fillRect(cx - radius, bandY - 14, radius * 2, 26);
-
-          // F. Lower Refraction Ground Ambient
-          const underGlow = ctx.createRadialGradient(
-            cx, cy + radius * 0.85, radius * 0.05,
-            cx, cy + radius * 0.6, radius * 0.55
+          // Specular highlight
+          const specGrad = ctx.createLinearGradient(
+            cx - baseRadius * 0.6,
+            cy - baseRadius * 0.7,
+            cx,
+            cy
           );
-          underGlow.addColorStop(0, isRecording ? "rgba(212, 255, 36, 0.15)" : "rgba(21, 88, 201, 0.18)");
-          underGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
-          ctx.fillStyle = underGlow;
-          ctx.fillRect(cx - radius, cy + radius * 0.35, radius * 2, radius * 0.65);
-
-          // End of sphere clip
-          ctx.restore();
-
-          // 4. Precision 1.2px Fresnel Perimeter Rim Light
-          const rimGrad = ctx.createLinearGradient(cx, cy - radius, cx, cy + radius);
-          rimGrad.addColorStop(0, "rgba(255, 255, 255, 0.98)");
-          rimGrad.addColorStop(0.36, "rgba(225, 238, 255, 0.75)");
-          rimGrad.addColorStop(0.5, isRecording ? "rgba(212, 255, 36, 1.0)" : "rgba(85, 160, 255, 1.0)");
-          rimGrad.addColorStop(0.66, isRecording ? "rgba(180, 225, 20, 0.65)" : "rgba(21, 88, 201, 0.65)");
-          rimGrad.addColorStop(0.86, "rgba(40, 75, 140, 0.4)");
-          rimGrad.addColorStop(1, "rgba(255, 255, 255, 0.22)");
+          specGrad.addColorStop(0, "rgba(255, 255, 255, 0.75)");
+          specGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.15)");
+          specGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
 
           ctx.beginPath();
-          ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-          ctx.strokeStyle = rimGrad;
-          ctx.lineWidth = 1.3;
-          ctx.stroke();
+          ctx.ellipse(
+            cx - baseRadius * 0.25,
+            cy - baseRadius * 0.35,
+            baseRadius * 0.38,
+            baseRadius * 0.18,
+            -Math.PI / 4,
+            0,
+            Math.PI * 2
+          );
+          ctx.fillStyle = specGrad;
+          ctx.fill();
+
+          ctx.restore();
+
+          // 7. Orbital Particles (In Front)
+          particles.forEach((p) => {
+            const sinA = Math.sin(p.angle);
+            if (sinA >= 0) {
+              const cosA = Math.cos(p.angle);
+              const orbitR = baseRadius + 18 + p.distOffset;
+              const px = cx + cosA * orbitR;
+              const py = cy + sinA * (orbitR * p.tilt);
+              const alpha = 0.4 + sinA * 0.6;
+              ctx.beginPath();
+              ctx.arc(px, py, p.size * (1 + energy * 0.3), 0, Math.PI * 2);
+              ctx.fillStyle = p.hue === "cyan"
+                ? `rgba(56, 189, 248, ${alpha})`
+                : `rgba(212, 255, 36, ${alpha})`;
+              ctx.shadowColor = p.hue === "cyan" ? "rgba(56, 189, 248, 0.9)" : "rgba(212, 255, 36, 0.9)";
+              ctx.shadowBlur = 8;
+              ctx.fill();
+              ctx.shadowBlur = 0;
+            }
+          });
 
           ctx.restore();
           animId = requestAnimationFrame(render);
@@ -434,11 +694,9 @@
       }, [isSpeaking, isRecording]);
 
       const handleOrbClick = (e) => {
-        // Trigger Canvas UI Force Field Shockwave
         shockwavesRef.current.push({
           r: 25,
-          alpha: 1.0,
-          color: isRecording ? "ruby" : "mint"
+          alpha: 1.0
         });
         if (onClick) onClick(e);
       };
@@ -448,19 +706,19 @@
           <div
             className="canvas-ai-orb-anchor"
             onClick={handleOrbClick}
-            title="Canvas UI Interactive Orb — Click to advance conversational turn"
+            title="Gemini & OpenAI Voice Organism — Click to speak or pause"
           >
             <canvas ref={canvasRef} className="canvas-orb-element" />
           </div>
 
           <div className="orb-state-chip">
-            <span className="pulsing-dot"></span>
+            <span className={`pulsing-dot ${isSpeaking ? 'speaking' : isRecording ? 'listening' : ''}`}></span>
             <span>
               {isSpeaking
-                ? "COMPANION REASONING & SPEAKING"
+                ? "AGENT SYNTHESIZING & SPEAKING"
                 : isRecording
-                ? "LISTENING TO MICROPHONE INPUT..."
-                : "SYNCUP COMPANION READY // INTERACTION ACTIVE"}
+                ? "LISTENING TO CALLER VOICE..."
+                : "CONTINUOUS HANDS-FREE ACTIVE"}
             </span>
           </div>
         </div>
@@ -569,7 +827,10 @@
       const [isHandsFree, setIsHandsFree] = useState(true); // Continuous hands-free voice mode
       const [isSoundOn, setIsSoundOn] = useState(true);
       const [inputMsg, setInputMsg] = useState("");
-      const [isDispatched, setIsDispatched] = useState(false);
+      const [dispatchedChannel, setDispatchedChannel] = useState(null);
+      const [liveSummary, setLiveSummary] = useState(
+        "Marcus Vance reported that 24 handheld barcode scanners in Zone B are freezing with error MEM_ALLOC_FAIL when scanning QR codes with prefix 'PR-'. Began at 23:45 following the 22:00 maintenance window. Zone A remains normal. 420 orders at risk before truck departure."
+      );
 
       const [conversation, setConversation] = useState([
         {
@@ -629,7 +890,8 @@
         ]);
         setClaims(sc.claims);
         setSufficientDetail(sc.sufficientDetail);
-        setIsDispatched(false);
+        setDispatchedChannel(null);
+        setLiveSummary(`${sc.reporter.name} reported: "${sc.initialReport.slice(0, 160)}...". Impact: ${sc.impact}`);
         showToast(`Loaded: ${sc.title}`);
         speakAloud(sc.initialAgentQuestion);
       };
@@ -875,6 +1137,11 @@
           setSufficientDetail((prev) => Math.min(1.0, prev + 0.03));
         }
 
+        setLiveSummary((prev) => {
+          const snippet = text.length > 60 ? `${text.slice(0, 58)}...` : text;
+          return `${prev} Added caller note: "${snippet}". Evaluating operational root cause and team resolution path.`;
+        });
+
         // Agent speaks and responds
         setTimeout(() => {
           setConversation((prev) => [
@@ -889,10 +1156,14 @@
         }, 600);
       };
 
-      // Dispatch Ticket Action
-      const handleDispatchTicket = () => {
-        setIsDispatched(true);
-        const confirmMsg = `Ticket ${activeScenario.ticketId} has been successfully dispatched to ${activeScenario.targetDepartment} with P1 Priority. On-call incident commander paged via pager duty.`;
+      // Quick Escalation Action (Slack, Email, SMS)
+      const handleEscalate = (channel) => {
+        setDispatchedChannel(channel);
+        let channelName = 'Slack (#incident-war-room)';
+        if (channel === 'email') channelName = 'Email (On-Call Infrastructure Distribution)';
+        if (channel === 'sms') channelName = 'Direct SMS / Pager Alert';
+
+        const confirmMsg = `Ticket ${activeScenario.ticketId} has been escalated to ${activeScenario.targetDepartment} via ${channelName}. Incident commander and triage squad notified.`;
         setConversation((prev) => [
           ...prev,
           {
@@ -902,7 +1173,7 @@
           }
         ]);
         speakAloud(confirmMsg);
-        showToast(`🚀 Ticket ${activeScenario.ticketId} Dispatched to IT!`);
+        showToast(`🚀 Escalated to ${channelName}!`);
       };
 
       return (
@@ -918,7 +1189,11 @@
             <div className="brand-group">
               <div className="brand-orb-icon">✦</div>
               <div>
-                <h1 className="brand-title">SyncUp</h1>
+                <h1 className="brand-title">
+                  <span className="shimmer-text-element" style={{ "--shimmer-color": "#D4FF24", "--base-color": "#FFFFFF", "--duration": "4s" }}>
+                    SyncUp
+                  </span>
+                </h1>
                 <p className="brand-subtitle">Voice Problem Intake & Incident Triage Agent</p>
               </div>
             </div>
@@ -974,19 +1249,11 @@
                   />
                 </div>
 
-                {/* Audio Frequency Waveform Visualizer */}
-                <div className="voice-spectrum-visualizer" aria-label="Live Audio Frequency Spectrum">
-                  {[0.4, 0.7, 1.0, 0.6, 0.9, 0.5, 0.8, 1.0, 0.6, 0.4, 0.8, 0.5].map((h, idx) => (
-                    <span
-                      key={idx}
-                      className={`spectrum-bar ${isSpeaking ? "speaking" : isRecording ? "recording" : ""}`}
-                      style={{
-                        animationDelay: `${idx * 0.1}s`,
-                        height: isSpeaking ? `${Math.max(14, h * 38)}px` : isRecording ? `${Math.max(12, h * 32)}px` : "8px"
-                      }}
-                    />
-                  ))}
-                </div>
+                {/* Fluid Waveform Visualizer (Dribbble-Grade Audio Ribbon) */}
+                <FluidWaveformVisualizer
+                  isSpeaking={isSpeaking}
+                  isRecording={isRecording}
+                />
 
                 <p className="voice-agent-turn-hint">
                   {isSpeaking
@@ -1007,19 +1274,41 @@
                 <div className="core-chat-stream" ref={chatScrollRef} role="log" aria-live="polite">
                   {conversation.map((msg, i) => (
                     <div key={i} className={`chat-message-bubble ${msg.role}`}>
-                      <div className="bubble-avatar-badge">
-                        {msg.role === "agent" ? "✦" : "👤"}
+                      <div className="bubble-sender-row">
+                        <span className="bubble-avatar-badge" aria-hidden="true">
+                          {msg.role === "agent" ? "✦" : "👤"}
+                        </span>
+                        <span className="bubble-author">{msg.sender}</span>
+                        <span className="bubble-role-tag">
+                          {msg.role === "agent" ? "AI INTAKE" : "FRONTLINE CALLER"}
+                        </span>
                       </div>
                       <div className="bubble-content-card">
-                        <div className="bubble-sender-row">
-                          <span className="bubble-author">{msg.sender}</span>
-                          <span className="bubble-role-tag">{msg.role === "agent" ? "INTAKE AGENT" : "REPORTER"}</span>
-                        </div>
                         <p className="bubble-text">{msg.body}</p>
                       </div>
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Frontline Quick Reply Suggestion Stream */}
+              <div className="quick-suggestions-stream" aria-label="Quick conversational responses">
+                {[
+                  "Zone A scanners work fine on 1D barcodes",
+                  "Issue began right after 22:00 WMS update",
+                  "400 orders at risk, trucks depart in 90 mins",
+                  "Need OTA firmware rollback immediately"
+                ].map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="quick-reply-pill"
+                    onClick={() => handleSendUserMessage(chip)}
+                    title={`Send quick update: "${chip}"`}
+                  >
+                    <span>💬</span> {chip}
+                  </button>
+                ))}
               </div>
 
               {/* Bottom: Hands-Free Voice & Input Command Dock */}
@@ -1042,6 +1331,14 @@
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                     <line x1="12" x2="12" y1="19" y2="22"/>
                   </svg>
+                  {isRecording && (
+                    <div className="mic-mini-visualizer" aria-hidden="true">
+                      <span className="mini-bar b1"></span>
+                      <span className="mini-bar b2"></span>
+                      <span className="mini-bar b3"></span>
+                      <span className="mini-bar b4"></span>
+                    </div>
+                  )}
                 </button>
 
                 {/* Text Fallback Input */}
@@ -1069,130 +1366,121 @@
             </section>
 
             {/* ========================================================
-               RIGHT COLUMN: Live Ticket & Problem Intake Dossier
+               RIGHT COLUMN (~30%): Compact Live Summary & Quick Escalation Channels
                ======================================================== */}
-            <aside className="ticket-dossier-column" aria-label="Live Incident Ticket Dossier">
-              {/* Ticket Header & Status Pill */}
+            <aside className="ticket-dossier-column" aria-label="Incident Summary and Escalation">
+              {/* Header with Ticket Tag */}
               <div className="ticket-header-strip">
                 <div className="ticket-id-tag">
-                  <span className="ticket-number">TICKET #{activeScenario.ticketId}</span>
-                  <span className={`ticket-status-pill ${isDispatched ? "dispatched" : "p1-urgent"}`}>
-                    <span className="ruby-strobe-circle"></span>
-                    {isDispatched ? "DISPATCHED TO IT" : "P1 - CRITICAL ESCALATION"}
+                  <span className="ruby-strobe-circle" style={{ background: "var(--lime-accent)", boxShadow: "0 0 8px var(--lime-accent)" }}></span>
+                  <span className="shimmer-text-element" style={{ "--shimmer-color": "#79B0FF", "--base-color": "#79B0FF", "--duration": "3s" }}>
+                    #{activeScenario.ticketId}
                   </span>
                 </div>
+                <div className="ticket-status-pill p1-urgent">
+                  <span className="shimmer-text-element" style={{ "--shimmer-color": "#FFFFFF", "--base-color": "#D4FF24", "--duration": "2.5s" }}>
+                    P1 - CRITICAL ESCALATION
+                  </span>
+                </div>
+              </div>
 
-                {/* Scenario Switcher Tabs */}
-                <div className="scenario-switcher-row">
-                  {INCIDENT_SCENARIOS.map((sc, i) => (
-                    <button
-                      key={sc.id}
-                      type="button"
-                      className={`scenario-tab-btn ${scenarioIdx === i ? "active" : ""}`}
-                      onClick={() => handleSelectScenario(i)}
-                    >
-                      {i === 0 ? "📦 Warehouse" : i === 1 ? "💳 FinTech" : "🏥 Hospital"}
-                    </button>
+              {/* Scenario Switcher Tabs */}
+              <div className="scenario-switcher-row" style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
+                {INCIDENT_SCENARIOS.map((sc, i) => (
+                  <button
+                    key={sc.id}
+                    type="button"
+                    className={`scenario-tab-btn ${scenarioIdx === i ? "active" : ""}`}
+                    onClick={() => handleSelectScenario(i)}
+                  >
+                    {i === 0 ? "📦 Warehouse" : i === 1 ? "💳 FinTech" : "🏥 Hospital"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Incident Title */}
+              <div style={{ flexShrink: 0 }}>
+                <h2 className="incident-headline">{activeScenario.title}</h2>
+              </div>
+
+              {/* 1. Live Plain-Language Summary Window */}
+              <div className="summary-card">
+                <div className="card-mini-label">
+                  <span>📋 LIVE SITUATION SUMMARY</span>
+                </div>
+                <p className="summary-text">
+                  {liveSummary}
+                </p>
+              </div>
+
+              {/* 2. Key Situation Facts Gathered */}
+              <div className="key-details-card">
+                <div className="card-mini-label">
+                  <span>🔍 GATHERED FACTS ({claims.length})</span>
+                </div>
+                <ul className="key-details-list">
+                  {claims.slice(0, 4).map((c) => (
+                    <li key={c.id} className="detail-item">
+                      <span className="check-icon">✓</span>
+                      <span className="detail-text">{c.text}</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
 
-              {/* Caller & Incident Title Card */}
-              <div className="dossier-incident-card">
-                <h3 className="incident-headline">{activeScenario.title}</h3>
-                <p className="incident-subline">{activeScenario.subtitle}</p>
-                <div className="incident-meta-chips">
-                  <span>👤 {activeScenario.reporter.name}</span>
-                  <span>📍 {activeScenario.reporter.location}</span>
-                  <span>🏷️ {activeScenario.department}</span>
-                </div>
-              </div>
-
-              {/* Intake Completeness & Urgency Metric Grid */}
-              <div className="dossier-metric-grid">
-                <div className="metric-cell">
-                  <span className="metric-label">DETAIL CAPTURED</span>
-                  <span className="metric-val">{(sufficientDetail * 100).toFixed(0)}%</span>
-                  <div className="progress-bar-track">
-                    <div className="progress-bar-fill" style={{ width: `${sufficientDetail * 100}%` }}></div>
+              {/* 3. Recommended Resolution Team with BorderBeam */}
+              <div className="assigned-team-card-wrapper">
+                <div className="assigned-team-card">
+                  <div className="border-beam-container" aria-hidden="true">
+                    <div className="border-beam-tracer" style={{ "--color-from": "#D4FF24", "--color-to": "#1558C9", "--duration": "7s" }}></div>
                   </div>
-                </div>
-                <div className="metric-cell">
-                  <span className="metric-label">URGENCY SCORE</span>
-                  <span className="metric-val text-ruby">{activeScenario.urgency} / 5</span>
-                  <span className="metric-sub">Max Priority</span>
-                </div>
-                <div className="metric-cell">
-                  <span className="metric-label">TARGET DEPT</span>
-                  <span className="metric-val truncate">{activeScenario.targetDepartment.replace("Infrastructure", "")}</span>
-                  <span className="metric-sub">On-Call Routing</span>
+                  <div className="card-mini-label">
+                    <span>🎯 RECOMMENDED RESOLUTION TEAM</span>
+                  </div>
+                  <div className="team-name">{activeScenario.targetDepartment}</div>
+                  <div className="team-routing-note">Auto-selected by AI based on operational symptoms</div>
                 </div>
               </div>
 
-              {/* Epistemic Triad Stream: Triaged Claims */}
-              <div className="epistemic-stream-deck">
-                <div className="triad-group facts-group">
-                  <div className="triad-group-header">
-                    <span>🟢 VERIFIED FACTS ({claims.filter(c => c.type === "observed_fact").length})</span>
-                    <span className="triad-sub">Confirmed by Caller</span>
-                  </div>
-                  {claims.filter(c => c.type === "observed_fact").map(c => (
-                    <div key={c.id} className="claim-item-row fact">
-                      <span className="bullet">✓</span>
-                      <p className="claim-text">{c.text}</p>
-                      <span className="confidence-chip">{(c.confidence * 100).toFixed(0)}%</span>
-                    </div>
-                  ))}
+              {/* 4. Quick Escalation Channels */}
+              <div className="escalation-actions-section">
+                <div className="card-mini-label">
+                  <span>🚀 QUICK ESCALATION CHANNELS</span>
                 </div>
+                <div className="escalation-buttons-group">
+                  {/* Slack Option */}
+                  <button
+                    type="button"
+                    className={`escalate-btn slack-btn ${dispatchedChannel === 'slack' ? 'dispatched' : ''}`}
+                    onClick={() => handleEscalate('slack')}
+                    disabled={dispatchedChannel === 'slack'}
+                  >
+                    <span>💬</span>
+                    <span>{dispatchedChannel === 'slack' ? 'Sent to #incident-war-room ✓' : 'Send to Slack'}</span>
+                  </button>
 
-                <div className="triad-group unknowns-group">
-                  <div className="triad-group-header">
-                    <span>🔴 CRITICAL UNKNOWNS ({claims.filter(c => c.type === "critical_unknown").length})</span>
-                    <span className="triad-sub">Triage Gaps</span>
-                  </div>
-                  {claims.filter(c => c.type === "critical_unknown").map(c => (
-                    <div key={c.id} className="claim-item-row unknown">
-                      <span className="bullet">?</span>
-                      <p className="claim-text">{c.text}</p>
-                      <span className="confidence-chip unknown">{(c.confidence * 100).toFixed(0)}%</span>
-                    </div>
-                  ))}
+                  {/* Email Option */}
+                  <button
+                    type="button"
+                    className={`escalate-btn email-btn ${dispatchedChannel === 'email' ? 'dispatched' : ''}`}
+                    onClick={() => handleEscalate('email')}
+                    disabled={dispatchedChannel === 'email'}
+                  >
+                    <span>✉️</span>
+                    <span>{dispatchedChannel === 'email' ? 'Dispatched via Email ✓' : 'Send via Email'}</span>
+                  </button>
+
+                  {/* SMS / Message Option */}
+                  <button
+                    type="button"
+                    className={`escalate-btn sms-btn ${dispatchedChannel === 'sms' ? 'dispatched' : ''}`}
+                    onClick={() => handleEscalate('sms')}
+                    disabled={dispatchedChannel === 'sms'}
+                  >
+                    <span>📱</span>
+                    <span>{dispatchedChannel === 'sms' ? 'SMS Alert Dispatched ✓' : 'Send SMS / Message'}</span>
+                  </button>
                 </div>
-
-                <div className="triad-group hypotheses-group">
-                  <div className="triad-group-header">
-                    <span>🟡 CALLER HYPOTHESES ({claims.filter(c => c.type === "user_hypothesis").length})</span>
-                    <span className="triad-sub">Working Theories</span>
-                  </div>
-                  {claims.filter(c => c.type === "user_hypothesis").map(c => (
-                    <div key={c.id} className="claim-item-row hypothesis">
-                      <span className="bullet">⚡</span>
-                      <p className="claim-text">{c.text}</p>
-                      <span className="confidence-chip hypothesis">{(c.confidence * 100).toFixed(0)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Matched Company SOP & Impact */}
-              <div className="dossier-sop-card">
-                <div className="sop-title-row">
-                  <span className="sop-badge">MATCHED SOP</span>
-                  <span className="sop-name">{activeScenario.matchedSop}</span>
-                </div>
-                <p className="sop-impact">⚠️ {activeScenario.impact}</p>
-              </div>
-
-              {/* Escalation Action Dock */}
-              <div className="dossier-dispatch-dock">
-                <button
-                  type="button"
-                  className={`dispatch-ticket-btn ${isDispatched ? "dispatched" : ""}`}
-                  onClick={handleDispatchTicket}
-                  disabled={isDispatched}
-                >
-                  {isDispatched ? "✅ Ticket Dispatched to IT On-Call" : "🚀 Dispatch Ticket & Escalate to IT Infrastructure"}
-                </button>
               </div>
             </aside>
           </main>

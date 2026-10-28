@@ -1,6 +1,7 @@
 import db, { clearAllPreScenarios } from '../db/database.js';
 import { llmDialogue } from '../services/llmDialogueService.js';
 import { OpenAIDecisionsService } from '../services/openaiDecisionsService.js';
+import { SummaryService } from '../services/summaryService.js';
 
 export const incidentsController = {
   // GET /api/incidents/tickets
@@ -91,7 +92,7 @@ export const incidentsController = {
   },
 
   // GET /api/incidents/tickets/:id
-  getTicketDetails(req, res) {
+  async getTicketDetails(req, res) {
     try {
       const { id } = req.params;
       const ticket = db.prepare('SELECT * FROM tickets WHERE id = ? OR scenario_id = ?').get(id, id);
@@ -105,6 +106,13 @@ export const incidentsController = {
 
       const turns = db.prepare('SELECT role, sender, body, timestamp FROM conversation_turns WHERE ticket_id = ? ORDER BY id ASC').all(ticket.id);
       const claims = db.prepare('SELECT id, text, type, confidence FROM epistemic_claims WHERE ticket_id = ? ORDER BY id ASC').all(ticket.id);
+
+      // Generate dynamic plain-language summary
+      const summaryResult = await SummaryService.generateSummary({
+        ticket,
+        conversationHistory: turns,
+        claims
+      });
 
       res.json({
         ticket: {
@@ -122,7 +130,9 @@ export const incidentsController = {
           reporter
         },
         conversation: turns,
-        claims
+        claims,
+        liveSummary: summaryResult.liveSummary,
+        keyDetails: claims.map(c => c.text)
       });
     } catch (err) {
       console.error('[incidentsController] Error in getTicketDetails:', err);
@@ -146,24 +156,7 @@ export const incidentsController = {
       if (!ticket) {
         ticketId = `INC-${Math.floor(1000 + Math.random() * 9000)}`;
 
-        // Dynamic department inference from caller speech
-        const lower = userMessage.toLowerCase();
-        let inferredDept = 'General Operations';
-        let inferredTarget = 'On-Call Engineering';
-
-        if (lower.includes('scanner') || lower.includes('warehouse') || lower.includes('truck') || lower.includes('wms')) {
-          inferredDept = 'Supply Chain & Logistics';
-          inferredTarget = 'Warehouse IT Systems';
-        } else if (lower.includes('pay') || lower.includes('504') || lower.includes('checkout') || lower.includes('bank')) {
-          inferredDept = 'Payments Core';
-          inferredTarget = 'Financial Systems Engineering';
-        } else if (lower.includes('icu') || lower.includes('patient') || lower.includes('vital') || lower.includes('nurse')) {
-          inferredDept = 'Clinical Care';
-          inferredTarget = 'Clinical Engineering';
-        } else if (lower.includes('cloud') || lower.includes('server') || lower.includes('database') || lower.includes('kubernetes')) {
-          inferredDept = 'Cloud Platform';
-          inferredTarget = 'Site Reliability Engineering';
-        }
+        const teamEval = SummaryService.evaluateResolutionTeam(userMessage);
 
         const dynamicTitle = userMessage.length > 45 ? `${userMessage.slice(0, 42)}...` : userMessage;
 
@@ -177,8 +170,8 @@ export const incidentsController = {
           ticketId.toLowerCase(),
           dynamicTitle,
           'Dynamic Incident Intake',
-          inferredDept,
-          inferredTarget,
+          'Frontline Operations',
+          teamEval.department,
           JSON.stringify({ name: senderName || 'Frontline Caller', role: 'Caller', location: 'Live Intake' })
         );
 
@@ -230,18 +223,31 @@ export const incidentsController = {
         `).run(claim.id, ticketId, claim.text, claim.type, claim.confidence);
       }
 
-      // Update detail score in database
-      const newDetailScore = Math.min(1.0, parseFloat((ticket.sufficient_detail + 0.05).toFixed(2)));
-      db.prepare('UPDATE tickets SET sufficient_detail = ? WHERE id = ?').run(newDetailScore, ticketId);
+      const allClaims = db.prepare('SELECT id, text, type, confidence FROM epistemic_claims WHERE ticket_id = ? ORDER BY id DESC').all(ticketId);
 
-      // 4. Save agent reply turn
+      // 4. Brain 3: Generate Live Plain-Language Summary & Evaluate Optimal Escalation Team
+      const summaryResult = await SummaryService.generateSummary({
+        ticket,
+        conversationHistory,
+        claims: allClaims
+      });
+
+      const teamEval = SummaryService.evaluateResolutionTeam(userMessage, ticket.target_department);
+
+      // Update detail score and target department in database
+      const newDetailScore = Math.min(1.0, parseFloat((ticket.sufficient_detail + 0.05).toFixed(2)));
+      db.prepare('UPDATE tickets SET sufficient_detail = ?, target_department = ? WHERE id = ?').run(
+        newDetailScore,
+        teamEval.department,
+        ticketId
+      );
+
+      // 5. Save agent reply turn
       const agentReplyText = socraticResult.reply;
       db.prepare(`
         INSERT INTO conversation_turns (ticket_id, role, sender, body)
         VALUES (?, 'agent', 'SyncUp Intake Agent', ?)
       `).run(ticketId, agentReplyText);
-
-      const allClaims = db.prepare('SELECT id, text, type, confidence FROM epistemic_claims WHERE ticket_id = ? ORDER BY id DESC').all(ticketId);
 
       res.json({
         success: true,
@@ -250,6 +256,11 @@ export const incidentsController = {
         source: socraticResult.source,
         decisionEvaluation: decisionsResult.answers,
         sufficientDetail: newDetailScore,
+        liveSummary: summaryResult.liveSummary,
+        recommendedTeam: teamEval.department,
+        teamRationale: teamEval.rationale,
+        teamConfidence: teamEval.confidence,
+        keyDetails: allClaims.map(c => c.text),
         newClaims,
         allClaims
       });
